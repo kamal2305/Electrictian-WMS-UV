@@ -2,36 +2,33 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../config/axios';
 import { toast } from 'react-toastify';
-import './ElectricianList.css';
+import { FaPlus, FaSearch, FaUserTie, FaPhone, FaEnvelope, FaBriefcase, FaEdit, FaTrash } from 'react-icons/fa';
 
 const ElectricianList = () => {
   const [electricians, setElectricians] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    fetchElectricians();
-  }, []);
 
   const fetchElectricians = async () => {
     try {
+      setLoading(true);
       const res = await api.get('/users/electricians');
-      setElectricians(res.data.data);
-      setError(null);
+      if (res.data.success) {
+        setElectricians(res.data.data);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Error fetching electricians');
       toast.error('Error fetching electricians');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete ${name}?`)) {
-      return;
-    }
+  useEffect(() => {
+    fetchElectricians();
+  }, []);
 
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
     try {
       await api.delete(`/users/electricians/${id}`);
       toast.success('Electrician deleted successfully');
@@ -41,76 +38,97 @@ const ElectricianList = () => {
     }
   };
 
-  const filteredElectricians = electricians.filter(
-    electrician =>
-      electrician.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      electrician.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      electrician.phone.includes(searchTerm)
+  const filtered = electricians.filter(e =>
+    e.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.phone?.includes(searchTerm) ||
+    e.specialization?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <div className="loading">Loading...</div>;
-  if (error) return <div className="error">{error}</div>;
-
   return (
-    <div className="electrician-list-container">
-      <div className="electrician-list-header">
-        <h2>Electricians Management</h2>
+    <div className="page-container">
+      <div className="page-header">
+        <div>
+          <h1>Electricians & Field Technicians</h1>
+          <div className="page-title-sub">Manage workforce profiles, specializations, contact details, and job logs</div>
+        </div>
         <Link to="/electricians/create" className="btn btn-primary">
-          Add New Electrician
+          <FaPlus /> Add New Electrician
         </Link>
       </div>
 
-      <div className="search-filter">
-        <input
-          type="text"
-          placeholder="Search by name, email or phone..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
+      <div className="filters-bar">
+        <div className="search-bar" style={{ flex: 1, minWidth: 260 }}>
+          <FaSearch className="search-bar-icon" />
+          <input
+            type="text"
+            placeholder="Search by name, specialization, phone, or email..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </div>
       </div>
 
-      {filteredElectricians.length === 0 ? (
-        <div className="no-results">
-          {searchTerm ? 'No electricians match your search' : 'No electricians found'}
+      {loading ? (
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <span>Loading technicians...</span>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="empty-state card">
+          <div className="empty-state-icon"><FaUserTie /></div>
+          <h3>No Electricians Found</h3>
+          <p>{searchTerm ? 'Try adjusting your search criteria' : 'Add your first electrician to assign jobs and track attendance'}</p>
+          {!searchTerm && (
+            <Link to="/electricians/create" className="btn btn-primary" style={{ marginTop: 16 }}>
+              <FaPlus /> Add New Electrician
+            </Link>
+          )}
         </div>
       ) : (
-        <div className="electrician-grid">
-          {filteredElectricians.map(electrician => (
-            <div key={electrician._id} className="electrician-card">
-              <div className="electrician-card-header">
-                <h3>{electrician.name}</h3>
+        <div className="grid-3">
+          {filtered.map(elec => (
+            <div key={elec._id} className="card electrician-card">
+              <div className="electrician-avatar">
+                {elec.name ? elec.name.slice(0, 2) : 'EL'}
               </div>
-              <div className="electrician-card-body">
-                <p>
-                  <i className="fas fa-envelope"></i> {electrician.email}
-                </p>
-                <p>
-                  <i className="fas fa-phone"></i> {electrician.phone}
-                </p>
-                <p>
-                  <i className="fas fa-calendar"></i> Joined:{' '}
-                  {new Date(electrician.createdAt).toLocaleDateString()}
-                </p>
+              <h3 style={{ fontSize: 16, fontWeight: 600 }}>{elec.name}</h3>
+              <div style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 500, marginBottom: 12 }}>
+                {elec.specialization || 'General Electrician'}
               </div>
-              <div className="electrician-job-summary">
-                <Link to={`/jobs/electrician/${electrician._id}`} className="job-summary-link">
-                  View Job History
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: 'var(--text-muted)', marginBottom: 18, textAlign: 'left' }}>
+                {elec.phone && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <FaPhone style={{ color: 'var(--primary)', fontSize: 11 }} />
+                    <span style={{ color: 'var(--text)' }}>{elec.phone}</span>
+                  </div>
+                )}
+                {elec.email && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <FaEnvelope style={{ color: 'var(--accent)', fontSize: 11 }} />
+                    <span>{elec.email}</span>
+                  </div>
+                )}
+                {elec.experience !== undefined && (
+                  <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>
+                    Experience: <b style={{ color: 'var(--text)' }}>{elec.experience} yrs</b>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Link to={`/jobs/electrician/${elec._id}`} className="btn btn-outline btn-sm">
+                  <FaBriefcase /> Assigned Jobs
                 </Link>
-              </div>
-              <div className="electrician-card-actions">
-                <Link
-                  to={`/electricians/${electrician._id}/edit`}
-                  className="btn btn-secondary btn-sm"
-                >
-                  Edit
-                </Link>
-                <button
-                  onClick={() => handleDelete(electrician._id, electrician.name)}
-                  className="btn btn-danger btn-sm"
-                >
-                  Delete
-                </button>
+                <div className="action-buttons">
+                  <Link to={`/electricians/${elec._id}/edit`} className="btn btn-secondary btn-sm" title="Edit">
+                    <FaEdit />
+                  </Link>
+                  <button onClick={() => handleDelete(elec._id, elec.name)} className="btn btn-danger btn-sm" title="Delete">
+                    <FaTrash />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -120,4 +138,4 @@ const ElectricianList = () => {
   );
 };
 
-export default ElectricianList; 
+export default ElectricianList;

@@ -1,248 +1,277 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FaEdit, FaFileDownload, FaArrowLeft } from 'react-icons/fa';
+import { useParams, Link } from 'react-router-dom';
 import api from '../../config/axios';
 import { toast } from 'react-toastify';
-import './InvoiceView.css';
+import { FaArrowLeft, FaDownload, FaEdit, FaPrint, FaBolt } from 'react-icons/fa';
 
 const InvoiceView = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [invoice, setInvoice] = useState(null);
+  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
-    const fetchInvoice = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await api.get(`/invoices/${id}`);
-        setInvoice(res.data.data);
-      } catch (error) {
-        console.error('Error fetching invoice:', error);
+        const [invRes, settRes] = await Promise.all([
+          api.get(`/invoices/${id}`),
+          api.get('/settings').catch(() => ({ data: { data: null } }))
+        ]);
+
+        if (invRes.data.success) setInvoice(invRes.data.data);
+        if (settRes.data?.data) setSettings(settRes.data.data);
+      } catch (err) {
         toast.error('Failed to load invoice');
-        navigate('/invoices');
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchInvoice();
-  }, [id, navigate]);
-  
-  const downloadInvoice = async () => {
+    fetchData();
+  }, [id]);
+
+  const handleDownloadPDF = async () => {
     try {
-      window.open(`${api.defaults.baseURL}/invoices/${id}/pdf`, '_blank');
-      toast.success('Invoice downloaded successfully');
-    } catch (error) {
-      console.error('Error downloading invoice:', error);
-      toast.error('Failed to download invoice');
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/invoices/${id}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('PDF download failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${invoice?.invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      toast.success('Invoice PDF downloaded!');
+    } catch (err) {
+      toast.error('Failed to download PDF');
     }
   };
-  
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
+
+  const handlePrint = () => {
+    window.print();
   };
-  
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-  
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'Draft': return 'status-draft';
-      case 'Pending Approval': return 'status-pending';
-      case 'Approved': return 'status-approved';
-      case 'Rejected': return 'status-rejected';
-      case 'Paid': return 'status-paid';
-      default: return '';
-    }
-  };
-  
+
   if (loading) {
-    return <div className="loading">Loading invoice details...</div>;
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <span>Loading invoice...</span>
+      </div>
+    );
   }
-  
+
   if (!invoice) {
-    return <div className="invoice-error">Invoice not found</div>;
-  }
-  
-  return (
-    <div className="invoice-view-container">
-      <div className="invoice-view-header">
-        <div className="header-left">
-          <Link to="/invoices" className="back-link">
-            <FaArrowLeft /> Back to Invoices
+    return (
+      <div className="page-container">
+        <div className="empty-state card">
+          <h3>Invoice Not Found</h3>
+          <Link to="/invoices" className="btn btn-secondary" style={{ marginTop: 16 }}>
+            Back to Invoices
           </Link>
-          <h2>Invoice #{invoice.invoiceNumber}</h2>
-          <span className={`status-badge ${getStatusClass(invoice.status)}`}>
-            {invoice.status}
-          </span>
-        </div>
-        <div className="header-actions">
-          {invoice.status === 'Draft' && (
-            <Link to={`/invoices/${id}/edit`} className="btn btn-secondary">
-              <FaEdit /> Edit Invoice
-            </Link>
-          )}
-          <button onClick={downloadInvoice} className="btn btn-primary">
-            <FaFileDownload /> Download PDF
-          </button>
         </div>
       </div>
-      
-      <div className="invoice-details">
-        <div className="invoice-info-section">
-          <div className="info-col">
-            <h3>Client Information</h3>
-            <p className="client-name">
-              {invoice.job?.client?.name || 'No client information'}
-            </p>
-            {invoice.job?.client?.address && (
-              <p className="client-address">{invoice.job.client.address}</p>
-            )}
-            {invoice.job?.client?.email && (
-              <p className="client-email">{invoice.job.client.email}</p>
-            )}
-            {invoice.job?.client?.phone && (
-              <p className="client-phone">{invoice.job.client.phone}</p>
-            )}
-          </div>
-          
-          <div className="info-col">
-            <h3>Invoice Details</h3>
-            <div className="detail-row">
-              <span>Invoice Date:</span>
-              <span>{formatDate(invoice.issueDate)}</span>
-            </div>
-            <div className="detail-row">
-              <span>Due Date:</span>
-              <span>{formatDate(invoice.dueDate)}</span>
-            </div>
-            <div className="detail-row">
-              <span>Job:</span>
-              <span>{invoice.job?.title || 'N/A'}</span>
-            </div>
-            <div className="detail-row">
-              <span>Job Number:</span>
-              <span>{invoice.job?.jobNumber || 'N/A'}</span>
-            </div>
-          </div>
+    );
+  }
+
+  const currency = settings?.currencySymbol || '₹';
+  const companyName = settings?.companyName || 'ElectroTrack WMS';
+  const clientName = invoice.customer?.name || invoice.client?.name || 'N/A';
+  const clientPhone = invoice.customer?.phone || invoice.client?.phone || '';
+  const clientAddress = invoice.customer?.address || invoice.client?.address || '';
+
+  return (
+    <div className="page-container" style={{ maxWidth: 900 }}>
+      {/* Top Action Bar */}
+      <div className="page-header" style={{ marginBottom: 20 }}>
+        <div>
+          <Link to="/invoices" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 13, marginBottom: 8 }}>
+            <FaArrowLeft /> Back to Invoices
+          </Link>
+          <h1>Invoice #{invoice.invoiceNumber}</h1>
         </div>
-        
-        {invoice.timeEntries && invoice.timeEntries.length > 0 && (
-          <div className="invoice-section">
-            <h3>Labor Charges</h3>
-            <div className="table-responsive">
-              <table className="invoice-table">
-                <thead>
-                  <tr>
-                    <th>Electrician</th>
-                    <th>Hours</th>
-                    <th>Rate ($/hr)</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoice.timeEntries.map((entry, index) => (
-                    <tr key={index}>
-                      <td>{entry.electricianName}</td>
-                      <td>{entry.hours.toFixed(2)}</td>
-                      <td>{formatCurrency(entry.rate)}</td>
-                      <td>{formatCurrency(entry.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="action-buttons">
+          <button onClick={handleDownloadPDF} className="btn btn-primary">
+            <FaDownload /> Download PDF
+          </button>
+          <button onClick={handlePrint} className="btn btn-secondary">
+            <FaPrint /> Print
+          </button>
+          <Link to={`/invoices/${invoice._id}/edit`} className="btn btn-secondary">
+            <FaEdit /> Edit
+          </Link>
+        </div>
+      </div>
+
+      {/* Invoice Document Card */}
+      <div className="invoice-view-container">
+        {/* Header Branding */}
+        <div className="invoice-print-header">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div className="sidebar-logo" style={{ width: 34, height: 34, fontSize: 16 }}>
+                <FaBolt color="#fff" />
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{companyName}</h2>
             </div>
+            {settings?.companyAddress && (
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 300 }}>{settings.companyAddress}</div>
+            )}
+            {settings?.companyPhone && (
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Ph: {settings.companyPhone}</div>
+            )}
+            {settings?.companyGstin && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>GSTIN: {settings.companyGstin}</div>
+            )}
           </div>
-        )}
-        
-        {invoice.materials && invoice.materials.length > 0 && (
-          <div className="invoice-section">
-            <h3>Materials</h3>
-            <div className="table-responsive">
-              <table className="invoice-table">
-                <thead>
-                  <tr>
-                    <th>Item</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoice.materials.map((item, index) => (
-                    <tr key={index}>
-                      <td>{item.name}</td>
-                      <td>{item.quantity}</td>
-                      <td>{formatCurrency(item.unitPrice)}</td>
-                      <td>{formatCurrency(item.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--primary)', letterSpacing: 1 }}>INVOICE</div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>#{invoice.invoiceNumber}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
+              Date: {new Date(invoice.createdAt).toLocaleDateString('en-IN')}
             </div>
-          </div>
-        )}
-        
-        <div className="invoice-section">
-          <h3>Summary</h3>
-          <div className="invoice-summary">
-            <div className="summary-row">
-              <span>Labor:</span>
-              <span>{formatCurrency(invoice.breakdown.laborCosts)}</span>
-            </div>
-            <div className="summary-row">
-              <span>Materials:</span>
-              <span>{formatCurrency(invoice.breakdown.materialCosts)}</span>
-            </div>
-            {invoice.breakdown.additionalFees > 0 && (
-              <div className="summary-row">
-                <span>Additional Fees:</span>
-                <span>{formatCurrency(invoice.breakdown.additionalFees)}</span>
+            {invoice.dueDate && (
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                Due: {new Date(invoice.dueDate).toLocaleDateString('en-IN')}
               </div>
             )}
-            <div className="summary-row">
-              <span>Subtotal:</span>
-              <span>
-                {formatCurrency(
-                  Number(invoice.breakdown.laborCosts) + 
-                  Number(invoice.breakdown.materialCosts) + 
-                  Number(invoice.breakdown.additionalFees || 0)
-                )}
+            <div style={{ marginTop: 10 }}>
+              <span className={`badge badge-${invoice.status?.toLowerCase().replace(' ', '-')}`}>
+                {invoice.status}
               </span>
-            </div>
-            <div className="summary-row">
-              <span>Tax ({invoice.breakdown.taxRate}%):</span>
-              <span>
-                {formatCurrency(
-                  (Number(invoice.breakdown.laborCosts) + 
-                   Number(invoice.breakdown.materialCosts) + 
-                   Number(invoice.breakdown.additionalFees || 0)) * 
-                  (Number(invoice.breakdown.taxRate) / 100)
-                )}
-              </span>
-            </div>
-            <div className="summary-row total">
-              <span>Total:</span>
-              <span>{formatCurrency(invoice.totalAmount)}</span>
             </div>
           </div>
         </div>
-        
-        {invoice.notes && (
-          <div className="invoice-section">
-            <h3>Notes</h3>
-            <p className="invoice-notes">{invoice.notes}</p>
+
+        {/* Invoice Body */}
+        <div className="invoice-body">
+          {/* Bill To & Related info */}
+          <div className="invoice-meta-grid">
+            <div className="invoice-meta-section">
+              <h4>BILL TO</h4>
+              <div style={{ fontWeight: 600, fontSize: 15 }}>{clientName}</div>
+              {clientPhone && <div>Phone: {clientPhone}</div>}
+              {clientAddress && <div>Address: {clientAddress}</div>}
+            </div>
+            <div className="invoice-meta-section">
+              <h4>PAYMENT & JOB REFERENCE</h4>
+              <div>Payment Method: <span style={{ fontWeight: 500 }}>{invoice.paymentMethod || 'Cash'}</span></div>
+              {invoice.job && <div>Job Reference: <span style={{ fontWeight: 500 }}>{invoice.job.title}</span></div>}
+              {invoice.transactionId && <div>Txn Ref: <span style={{ fontWeight: 500 }}>{invoice.transactionId}</span></div>}
+            </div>
           </div>
-        )}
-        
-        <div className="invoice-section">
-          <h3>Terms & Conditions</h3>
-          <p className="invoice-terms">{invoice.termsAndConditions}</p>
+
+          {/* Line Items Table */}
+          <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: 24 }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th style={{ textAlign: 'right' }}>Qty</th>
+                  <th style={{ textAlign: 'right' }}>Unit Price</th>
+                  <th style={{ textAlign: 'right' }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(invoice.items || []).map((item, i) => (
+                  <tr key={i}>
+                    <td>{item.description}</td>
+                    <td style={{ textAlign: 'right' }}>{item.quantity}</td>
+                    <td style={{ textAlign: 'right' }}>{currency}{Number(item.unitPrice).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{currency}{Number(item.total || item.quantity * item.unitPrice).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Breakdown & Totals */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
+            <div>
+              {invoice.notes && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Notes</div>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{invoice.notes}</p>
+                </div>
+              )}
+              {invoice.termsAndConditions && (
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Terms & Conditions</div>
+                  <p style={{ fontSize: 12, color: 'var(--text-dim)', whiteSpace: 'pre-wrap' }}>{invoice.termsAndConditions}</p>
+                </div>
+              )}
+              {settings?.bankName && (
+                <div style={{ marginTop: 16, padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Bank Account For Transfer</div>
+                  <div style={{ fontSize: 12 }}>Bank: <b>{settings.bankName}</b></div>
+                  <div style={{ fontSize: 12 }}>A/C: <b>{settings.accountNumber}</b></div>
+                  <div style={{ fontSize: 12 }}>IFSC: <b>{settings.ifscCode}</b></div>
+                  {settings.upiId && <div style={{ fontSize: 12, color: 'var(--accent)' }}>UPI: <b>{settings.upiId}</b></div>}
+                </div>
+              )}
+            </div>
+
+            <div>
+              {Number(invoice.labourCost) > 0 && (
+                <div className="invoice-summary-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Labour Cost:</span>
+                  <span>{currency}{Number(invoice.labourCost).toFixed(2)}</span>
+                </div>
+              )}
+              {Number(invoice.materialCost) > 0 && (
+                <div className="invoice-summary-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Material Cost:</span>
+                  <span>{currency}{Number(invoice.materialCost).toFixed(2)}</span>
+                </div>
+              )}
+              {Number(invoice.transportCharge) > 0 && (
+                <div className="invoice-summary-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Transport Charge:</span>
+                  <span>{currency}{Number(invoice.transportCharge).toFixed(2)}</span>
+                </div>
+              )}
+              {Number(invoice.serviceCharge) > 0 && (
+                <div className="invoice-summary-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Service Charge:</span>
+                  <span>{currency}{Number(invoice.serviceCharge).toFixed(2)}</span>
+                </div>
+              )}
+              {Number(invoice.otherCharge) > 0 && (
+                <div className="invoice-summary-row">
+                  <span style={{ color: 'var(--text-muted)' }}>{invoice.otherChargeLabel || 'Other Charge'}:</span>
+                  <span>{currency}{Number(invoice.otherCharge).toFixed(2)}</span>
+                </div>
+              )}
+              {Number(invoice.discount) > 0 && (
+                <div className="invoice-summary-row" style={{ color: 'var(--danger)' }}>
+                  <span>Discount:</span>
+                  <span>-{currency}{Number(invoice.discount).toFixed(2)}</span>
+                </div>
+              )}
+              {Number(invoice.tax) > 0 && (
+                <div className="invoice-summary-row">
+                  <span style={{ color: 'var(--text-muted)' }}>GST/Tax ({invoice.taxRate}%):</span>
+                  <span>{currency}{Number(invoice.tax).toFixed(2)}</span>
+                </div>
+              )}
+
+              <div className="invoice-total-row">
+                <span>Total Amount</span>
+                <span>{currency}{Number(invoice.totalAmount).toFixed(2)}</span>
+              </div>
+
+              {Number(invoice.amountPaid) > 0 && (
+                <div className="invoice-summary-row" style={{ color: 'var(--success)', marginTop: 8 }}>
+                  <span>Amount Paid:</span>
+                  <span>{currency}{Number(invoice.amountPaid).toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

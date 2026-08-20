@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../../config/axios';
 import { toast } from 'react-toastify';
 import { formatCurrency } from '../../utils/formatters';
-import './InvoiceDetail.css';
 
 const InvoiceDetail = () => {
   const { id } = useParams();

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import api from '../../config/axios';
 import { toast } from 'react-toastify';
-import './JobForm.css';
+import { FaArrowLeft, FaSave } from 'react-icons/fa';
 
 const JobForm = () => {
   const navigate = useNavigate();
@@ -13,203 +13,332 @@ const JobForm = () => {
     title: '',
     description: '',
     location: '',
-    startDate: '',
-    status: 'Not Started',
-    assignedElectricians: []
+    startDate: new Date().toISOString().split('T')[0],
+    dueDate: '',
+    status: 'Pending',
+    priority: 'Medium',
+    client: { name: '', phone: '', email: '', address: '' },
+    assignedTo: []
   });
 
+  const [customers, setCustomers] = useState([]);
   const [electricians, setElectricians] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const fetchElectricians = async () => {
-    try {
-      const res = await api.get('/users/electricians');
-      setElectricians(res.data.data);
-    } catch (err) {
-      setError('Error fetching electricians');
-      toast.error('Error fetching electricians');
-    }
-  };
-
-  const fetchJobDetails = async () => {
-    try {
-      const res = await api.get(`/jobs/${id}`);
-      const job = res.data.data;
-      setFormData({
-        title: job.title,
-        description: job.description,
-        location: job.location,
-        startDate: new Date(job.startDate).toISOString().split('T')[0],
-        status: job.status,
-        assignedElectricians: job.assignedElectricians.map(e => e._id)
-      });
-    } catch (err) {
-      setError('Error fetching job details');
-      toast.error('Error fetching job details');
-      navigate('/jobs');
-    }
-  };
+  const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    fetchElectricians();
-    if (isEditMode) {
-      fetchJobDetails();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditMode, id]);
+    const initData = async () => {
+      try {
+        setFetching(true);
+        const [elecRes, custRes] = await Promise.all([
+          api.get('/users/electricians').catch(() => ({ data: { data: [] } })),
+          api.get('/customers').catch(() => ({ data: { data: [] } }))
+        ]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    console.log(`Field changed: ${name} = ${value}`); // DEBUG: Log field changes
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+        if (elecRes.data?.data) setElectricians(elecRes.data.data);
+        if (custRes.data?.data) setCustomers(custRes.data.data);
+
+        if (isEditMode) {
+          const res = await api.get(`/jobs/${id}`);
+          if (res.data.success) {
+            const job = res.data.data;
+            setFormData({
+              title: job.title || '',
+              description: job.description || '',
+              location: job.location || '',
+              startDate: job.startDate ? new Date(job.startDate).toISOString().split('T')[0] : '',
+              dueDate: job.dueDate ? new Date(job.dueDate).toISOString().split('T')[0] : '',
+              status: job.status || 'Pending',
+              priority: job.priority || 'Medium',
+              client: job.client || { name: '', phone: '', email: '', address: '' },
+              assignedTo: (job.assignedTo || job.assignedElectricians || []).map(e => e._id || e)
+            });
+          }
+        }
+      } catch (err) {
+        toast.error('Error fetching job details');
+      } finally {
+        setFetching(false);
+      }
+    };
+    initData();
+  }, [id, isEditMode]);
+
+  const handleCustomerSelect = (customerId) => {
+    const c = customers.find(item => item._id === customerId);
+    if (c) {
+      setFormData(prev => ({
+        ...prev,
+        client: {
+          name: c.name || '',
+          phone: c.phone || '',
+          email: c.email || '',
+          address: c.address || ''
+        },
+        location: prev.location || c.address || ''
+      }));
+    }
   };
 
-  const handleElectricianChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-    setFormData(prev => ({
-      ...prev,
-      assignedElectricians: selectedOptions
-    }));
+  const handleElectricianToggle = (elecId) => {
+    setFormData(prev => {
+      const exists = prev.assignedTo.includes(elecId);
+      return {
+        ...prev,
+        assignedTo: exists ? prev.assignedTo.filter(e => e !== elecId) : [...prev.assignedTo, elecId]
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    // ERROR #1 FIX: Validate startDate before submission
-    console.log('Form data before validation:', formData); // DEBUG
-    console.log('Start date value:', formData.startDate, 'Type:', typeof formData.startDate); // DEBUG
-    
-    if (!formData.startDate || formData.startDate.trim() === '') {
-      toast.error('Please select a start date');
-      setError('Start date is required');
-      setLoading(false);
+    if (!formData.title.trim()) {
+      toast.error('Job title is required');
       return;
     }
 
-    console.log('Submitting job with data:', formData);
-
     try {
+      setLoading(true);
+      const payload = {
+        ...formData,
+        client: {
+          name: formData.client.name.trim() || 'General Client',
+          phone: formData.client.phone || '',
+          email: formData.client.email || '',
+          address: formData.client.address || formData.location || ''
+        }
+      };
+
       if (isEditMode) {
-        await api.put(`/jobs/${id}`, formData);
-        toast.success('Job updated successfully!');
+        await api.put(`/jobs/${id}`, payload);
+        toast.success('Job updated successfully');
       } else {
-        await api.post('/jobs', formData);
-        toast.success('Job created successfully!');
-        
-        // ERROR #4 FIX: Trigger dashboard refresh after creating new job
-        window.dispatchEvent(new Event('refreshDashboard'));
+        await api.post('/jobs', payload);
+        toast.success('Job created successfully');
       }
       navigate('/jobs');
     } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Error saving job. Please check all fields and try again.';
-      setError(message);
-      toast.error(message);
-      console.error('Job save error:', err);
+      console.error('Submit error:', err);
+      toast.error(err.response?.data?.message || 'Failed to save job');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (fetching) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <span>Loading form...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="job-form-container">
-      <h2>{isEditMode ? 'Edit Job' : 'Create New Job'}</h2>
-      {error && <div className="error-message">{error}</div>}
-      
-      <form onSubmit={handleSubmit} className="job-form">
-        <div className="form-group">
-          <label htmlFor="title">Job Title</label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-          />
+    <div className="page-container" style={{ maxWidth: 880 }}>
+      <div className="page-header">
+        <div>
+          <Link to="/jobs" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 13, marginBottom: 8 }}>
+            <FaArrowLeft /> Back to Jobs
+          </Link>
+          <h1>{isEditMode ? 'Edit Job Assignment' : 'Create New Job'}</h1>
+          <div className="page-title-sub">Specify site tasks, client information, and assign electricians</div>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div className="form-card card" style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>1. Job Overview</h3>
+          
+          <div className="form-group">
+            <label>Job Title *</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
+              placeholder="e.g. 3-Phase Panel Upgrade & Breaker Testing"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Detailed Description</label>
+            <textarea
+              rows="3"
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Scope of work, safety requirements, tools required..."
+            />
+          </div>
+
+          <div className="form-grid-3">
+            <div className="form-group">
+              <label>Status</label>
+              <select
+                value={formData.status}
+                onChange={e => setFormData({ ...formData, status: e.target.value })}
+              >
+                <option value="Pending">Pending</option>
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Priority</label>
+              <select
+                value={formData.priority}
+                onChange={e => setFormData({ ...formData, priority: e.target.value })}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High / Urgent</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Site Location / Area</label>
+              <input
+                type="text"
+                value={formData.location}
+                onChange={e => setFormData({ ...formData, location: e.target.value })}
+                placeholder="e.g. Building B, 4th Floor"
+              />
+            </div>
+          </div>
+
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label>Start Date</label>
+              <input
+                type="date"
+                value={formData.startDate}
+                onChange={e => setFormData({ ...formData, startDate: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>Due Date / Target Completion</label>
+              <input
+                type="date"
+                value={formData.dueDate}
+                onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
+        {/* Client details */}
+        <div className="form-card card" style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>2. Client / Customer Details</h3>
+
+          {customers.length > 0 && (
+            <div className="form-group">
+              <label>Import from Registered Customer</label>
+              <select onChange={e => handleCustomerSelect(e.target.value)} defaultValue="">
+                <option value="">-- Choose customer to auto-fill --</option>
+                {customers.map(c => (
+                  <option key={c._id} value={c._id}>{c.name} {c.company ? `(${c.company})` : ''}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label>Client Name</label>
+              <input
+                type="text"
+                value={formData.client.name}
+                onChange={e => setFormData({ ...formData, client: { ...formData.client, name: e.target.value } })}
+                placeholder="Client or Company Name"
+              />
+            </div>
+            <div className="form-group">
+              <label>Contact Phone</label>
+              <input
+                type="text"
+                value={formData.client.phone}
+                onChange={e => setFormData({ ...formData, client: { ...formData.client, phone: e.target.value } })}
+                placeholder="+91 98765 43210"
+              />
+            </div>
+          </div>
+
+          <div className="form-grid-2">
+            <div className="form-group">
+              <label>Email Address</label>
+              <input
+                type="email"
+                value={formData.client.email}
+                onChange={e => setFormData({ ...formData, client: { ...formData.client, email: e.target.value } })}
+                placeholder="client@company.com"
+              />
+            </div>
+            <div className="form-group">
+              <label>Address</label>
+              <input
+                type="text"
+                value={formData.client.address}
+                onChange={e => setFormData({ ...formData, client: { ...formData.client, address: e.target.value } })}
+                placeholder="Site address"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="location">Location</label>
-          <input
-            type="text"
-            id="location"
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            required
-          />
+        {/* Assigned Electricians */}
+        <div className="form-card card" style={{ marginBottom: 24 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>3. Assign Electricians</h3>
+          
+          {electricians.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No electricians registered yet. You can add them under Electricians menu.</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+              {electricians.map(e => {
+                const isAssigned = formData.assignedTo.includes(e._id);
+                return (
+                  <div
+                    key={e._id}
+                    onClick={() => handleElectricianToggle(e._id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      border: isAssigned ? '1px solid var(--primary)' : '1px solid var(--border)',
+                      background: isAssigned ? 'var(--primary-dim)' : 'rgba(255,255,255,0.02)',
+                      cursor: 'pointer',
+                      transition: 'var(--transition)'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isAssigned}
+                      onChange={() => {}}
+                      style={{ width: 'auto', margin: 0 }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 500, fontSize: 13, color: isAssigned ? 'var(--text)' : 'var(--text-muted)' }}>
+                        {e.name}
+                      </div>
+                      {e.specialization && (
+                        <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>{e.specialization}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="startDate">Start Date</label>
-          <input
-            type="date"
-            id="startDate"
-            name="startDate"
-            value={formData.startDate}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="status">Status</label>
-          <select
-            id="status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            required
-          >
-            <option value="Not Started">Not Started</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Completed">Completed</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="assignedElectricians">Assigned Electricians</label>
-          <select
-            id="assignedElectricians"
-            name="assignedElectricians"
-            multiple
-            value={formData.assignedElectricians}
-            onChange={handleElectricianChange}
-          >
-            {electricians.map(electrician => (
-              <option key={electrician._id} value={electrician._id}>
-                {electrician.name}
-              </option>
-            ))}
-          </select>
-          <small>Hold Ctrl (Windows) or Command (Mac) to select multiple electricians</small>
-        </div>
-
-        <div className="form-actions">
-          <button type="button" onClick={() => navigate('/jobs')} className="btn btn-outline" disabled={loading}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginBottom: 40 }}>
+          <Link to="/jobs" className="btn btn-secondary btn-lg">
             Cancel
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Saving...' : isEditMode ? 'Update Job' : 'Create Job'}
+          </Link>
+          <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
+            <FaSave /> {loading ? 'Saving...' : isEditMode ? 'Update Job' : 'Create Job'}
           </button>
         </div>
       </form>
@@ -217,4 +346,4 @@ const JobForm = () => {
   );
 };
 
-export default JobForm; 
+export default JobForm;

@@ -3,168 +3,203 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../config/axios';
 import { toast } from 'react-toastify';
-import JobStatusBadge from './JobStatusBadge';
-import './Jobs.css';
+import { FaPlus, FaSearch, FaBriefcase, FaCalendarAlt, FaMapMarkerAlt, FaUsers } from 'react-icons/fa';
 
 const Jobs = () => {
   const { user } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-
-  useEffect(() => {
-    fetchJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+  const [priorityFilter, setPriorityFilter] = useState('');
 
   const fetchJobs = async () => {
     try {
-      let url = `/jobs?page=${currentPage}`;
-      if (statusFilter) {
-        url += `&status=${statusFilter}`;
-      }
+      setLoading(true);
+      let url = '/jobs';
+      const params = new URLSearchParams();
+      if (statusFilter) params.append('status', statusFilter);
+      if (priorityFilter) params.append('priority', priorityFilter);
+      if (params.toString()) url += `?${params.toString()}`;
+
       const res = await api.get(url);
-      setJobs(res.data.data);
-      setTotalPages(res.data.totalPages);
-      setError(null);
+      if (res.data.success) {
+        setJobs(res.data.data);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Error fetching jobs');
       toast.error('Error fetching jobs');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusChange = (e) => {
-    setStatusFilter(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleRetry = () => {
-    setError(null);
+  useEffect(() => {
     fetchJobs();
+  }, [statusFilter, priorityFilter]);
+
+  const filteredJobs = jobs.filter(job => {
+    const term = searchTerm.toLowerCase();
+    const title = (job.title || '').toLowerCase();
+    const client = (job.client?.name || '').toLowerCase();
+    const loc = (job.location || '').toLowerCase();
+    return title.includes(term) || client.includes(term) || loc.includes(term);
+  });
+
+  const getStatusBadge = (status) => {
+    const s = (status || '').toLowerCase().replace(' ', '-');
+    if (s === 'completed') return 'badge-success';
+    if (s === 'in-progress') return 'badge-info';
+    if (s === 'not-started' || s === 'pending') return 'badge-warning';
+    if (s === 'cancelled') return 'badge-danger';
+    return 'badge-muted';
   };
 
-  if (loading) return <div className="loading">Loading jobs...</div>;
-  
-  if (error) {
-    return (
-      <div className="error-container">
-        <div className="error">{error}</div>
-        <button onClick={handleRetry} className="btn btn-primary retry-btn">
-          Retry
-        </button>
-      </div>
-    );
-  }
+  const getPriorityColor = (priority) => {
+    const p = (priority || '').toLowerCase();
+    if (p === 'high') return 'var(--danger)';
+    if (p === 'medium') return 'var(--warning)';
+    return 'var(--text-muted)';
+  };
 
   return (
-    <div className="jobs-container">
-      <div className="jobs-header">
-        <h2>Jobs Management</h2>
-        {user && user.role === 'admin' && (
+    <div className="page-container">
+      <div className="page-header">
+        <div>
+          <h1>Jobs Management</h1>
+          <div className="page-title-sub">Track work orders, site assignments, schedules, and deliverables</div>
+        </div>
+        {user?.role === 'admin' && (
           <Link to="/jobs/create" className="btn btn-primary">
-            Create New Job
+            <FaPlus /> Create New Job
           </Link>
         )}
       </div>
 
-      <div className="jobs-filters">
-        <select
-          value={statusFilter}
-          onChange={handleStatusChange}
-          className="status-filter"
-        >
-          <option value="">All Status</option>
+      {/* Filters Bar */}
+      <div className="filters-bar">
+        <div className="search-bar" style={{ flex: 1, minWidth: 260 }}>
+          <FaSearch className="search-bar-icon" />
+          <input
+            type="text"
+            placeholder="Search by job title, client, or location..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          <option value="">All Statuses</option>
           <option value="Not Started">Not Started</option>
           <option value="In Progress">In Progress</option>
           <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <select value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}>
+          <option value="">All Priorities</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
         </select>
       </div>
 
-      <div className="jobs-list">
-        {jobs.length === 0 ? (
-          <p className="no-jobs-message">No jobs found. {user && user.role === 'admin' && 'Create your first job to get started.'}</p>
-        ) : (
-          jobs.map((job) => (
-            <div key={job._id} className="job-card">
-              <div className="job-header">
-                <h3>{job.title}</h3>
-                <JobStatusBadge status={job.status} />
+      {loading ? (
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <span>Loading jobs...</span>
+        </div>
+      ) : filteredJobs.length === 0 ? (
+        <div className="empty-state card">
+          <div className="empty-state-icon"><FaBriefcase /></div>
+          <h3>No Jobs Found</h3>
+          <p>{searchTerm || statusFilter ? 'Try clearing your search filters' : 'Create your first job assignment to get started'}</p>
+          {user?.role === 'admin' && !searchTerm && !statusFilter && (
+            <Link to="/jobs/create" className="btn btn-primary" style={{ marginTop: 16 }}>
+              <FaPlus /> Create New Job
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="grid-2">
+          {filteredJobs.map(job => (
+            <div key={job._id} className="card job-card">
+              <div className="job-card-header">
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span className={`badge ${getStatusBadge(job.status)}`}>
+                      {job.status}
+                    </span>
+                    {job.priority && (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: getPriorityColor(job.priority), textTransform: 'uppercase' }}>
+                        ● {job.priority}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="job-card-title">{job.title}</h3>
+                </div>
+                <Link to={`/jobs/${job._id}`} className="btn btn-secondary btn-sm">
+                  View Details →
+                </Link>
               </div>
-              <p className="job-location">
-                <i className="fas fa-map-marker-alt"></i> {job.location}
-              </p>
-              <p className="job-description">{job.description}</p>
-              <div className="job-dates">
-                <span>
-                  <i className="fas fa-calendar"></i> Start: {new Date(job.startDate).toLocaleDateString()}
-                </span>
-                {job.completionDate && (
-                  <span>
-                    <i className="fas fa-flag-checkered"></i> Completed: {new Date(job.completionDate).toLocaleDateString()}
-                  </span>
+
+              {job.description && (
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 14, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {job.description}
+                </p>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: 12 }}>
+                {job.client?.name && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: 'var(--text)', fontWeight: 500 }}>Client:</span>
+                    <span>{job.client.name}</span>
+                    {job.client.phone && <span style={{ color: 'var(--text-dim)' }}>({job.client.phone})</span>}
+                  </div>
+                )}
+                {job.location && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <FaMapMarkerAlt style={{ color: 'var(--warning)', fontSize: 12 }} />
+                    <span>{job.location}</span>
+                  </div>
+                )}
+                {job.dueDate && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <FaCalendarAlt style={{ color: 'var(--accent)', fontSize: 12 }} />
+                    <span>Due: {new Date(job.dueDate).toLocaleDateString('en-IN')}</span>
+                  </div>
                 )}
               </div>
-              <div className="job-electricians">
-                <h4>Assigned Electricians:</h4>
-                <div className="electrician-tags">
-                  {job.assignedElectricians && job.assignedElectricians.length > 0 ? (
-                    job.assignedElectricians.map((electrician) => (
-                      <span key={electrician._id} className="electrician-tag">
-                        {electrician.name}
-                      </span>
-                    ))
+
+              {/* Assigned Electricians */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <FaUsers style={{ color: 'var(--primary)', fontSize: 13 }} />
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Assigned:</span>
+                  {job.assignedTo?.length > 0 ? (
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {job.assignedTo.map(e => (
+                        <span key={e._id || e} className="avatar" style={{ width: 24, height: 24, fontSize: 10 }} title={e.name || 'Electrician'}>
+                          {e.name ? e.name[0] : 'E'}
+                        </span>
+                      ))}
+                    </div>
                   ) : (
-                    <span className="no-electricians">No electricians assigned</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>None</span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {user?.role === 'admin' && (
+                    <Link to={`/invoices/create?jobId=${job._id}`} className="btn btn-outline btn-sm" title="Generate Bill for this Job">
+                      Bill Job
+                    </Link>
                   )}
                 </div>
               </div>
-              <div className="job-actions">
-                <Link to={`/jobs/${job._id}`} className="btn btn-outline">
-                  View Details
-                </Link>
-                {user && user.role === 'admin' && (
-                  <Link to={`/jobs/${job._id}/edit`} className="btn btn-secondary">
-                    Edit
-                  </Link>
-                )}
-              </div>
             </div>
-          ))
-        )}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="btn btn-outline"
-          >
-            Previous
-          </button>
-          <span className="page-info">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="btn btn-outline"
-          >
-            Next
-          </button>
+          ))}
         </div>
       )}
     </div>
   );
 };
 
-export default Jobs; 
+export default Jobs;

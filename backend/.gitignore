@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Environment Variables
+.env
+.env.*
+*.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+scratch/
+*.tmp

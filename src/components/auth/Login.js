@@ -2,132 +2,81 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
+import { FaBolt } from 'react-icons/fa';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-
   const { email, password } = formData;
   const { login, isAuthenticated, error } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
+  useEffect(() => { if (isAuthenticated) navigate('/dashboard'); }, [isAuthenticated, navigate]);
+  useEffect(() => { if (error) toast.error(error); }, [error]);
 
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
-    }
-  }, [error]);
+  const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const onChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-  const onSubmit = async (e) => {
+  const onSubmit = async e => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Please enter all fields');
-      return;
-    }
-    
+    if (!email || !password) { toast.error('Please fill in all fields'); return; }
     setLoading(true);
-    
     try {
       const result = await login({ email, password });
-      
-      if (result && result.success) {
-        toast.success('Login successful!');
-        
-        if (result.token) {
-          console.log('Setting token in localStorage after successful login');
-          localStorage.setItem('token', result.token);
-          
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 100);
-        } else {
-          console.error('Login response missing token');
-          toast.error('Login response missing token');
-        }
+      if (result?.success) {
+        toast.success('Welcome back!');
+        setTimeout(() => navigate('/dashboard'), 100);
       } else {
-        // ERROR #3 FIX: Always show error for failed login
-        const errorMsg = result?.message || 'Invalid email or password. Please try again.';
-        toast.error(errorMsg);
-        console.error('Login failed with result:', result);
+        toast.error(result?.message || 'Invalid credentials');
       }
     } catch (err) {
-      // ERROR #3 FIX: Enhanced error messages for login failures
-      let errorMessage = 'Login failed. Please try again.';
-      
-      if (err?.response?.status === 401) {
-        errorMessage = 'Invalid email or password';
-      } else if (err?.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err?.message) {
-        errorMessage = err.message;
-      }
-      
-      toast.error(errorMessage);
-      console.error('Login error:', err);
-    } finally {
-      setLoading(false);
-    }
+      toast.error(err?.response?.data?.message || 'Login failed');
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Sign In</h2>
-        <p className="text-muted">Sign in to your account</p>
-        
-        <form onSubmit={onSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={onChange}
-              placeholder="Enter your email"
-              required
-            />
+    <div className="auth-wrapper">
+      {/* Brand panel */}
+      <div className="auth-brand">
+        <div className="auth-brand-logo"><FaBolt /></div>
+        <h1>ElectroTrack</h1>
+        <p>The complete workforce management platform for electrical businesses</p>
+        <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 320, position: 'relative', zIndex: 1 }}>
+          {['Role-based access control', 'Real-time job tracking', 'PDF invoice generation', 'Material inventory'].map(f => (
+            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.7)', fontSize: 14 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
+              {f}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Form panel */}
+      <div className="auth-form-panel">
+        <div className="auth-card">
+          <h2>Welcome back</h2>
+          <p>Sign in to your ElectroTrack account</p>
+          <form onSubmit={onSubmit}>
+            <div className="form-group">
+              <label htmlFor="email">Email Address</label>
+              <input type="email" id="email" name="email" value={email} onChange={onChange} placeholder="admin@company.com" required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input type="password" id="password" name="password" value={password} onChange={onChange} placeholder="••••••••" required />
+            </div>
+            <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: 8 }}>
+              {loading ? (
+                <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Signing in...</>
+              ) : 'Sign In'}
+            </button>
+          </form>
+          <div className="auth-footer">
+            Don't have an account? <Link to="/register">Create one</Link>
           </div>
-          
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={onChange}
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-          
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
-        </form>
-        
-        <div className="auth-footer">
-          <p>
-            Don't have an account? <Link to="/register">Sign Up</Link>
-          </p>
         </div>
       </div>
     </div>
   );
 };
 
-export default Login; 
+export default Login;
