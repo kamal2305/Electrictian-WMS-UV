@@ -7,14 +7,20 @@ const API_PORTS = [5000, 5001, 5002, 5003, 5100, 5200];
 const getPort = () => {
   const savedPort = localStorage.getItem('apiPort');
   if (savedPort && !isNaN(Number(savedPort))) {
-    console.log(`Using saved API port from localStorage: ${savedPort}`);
     return Number(savedPort);
   }
-  return 5000; // Default port if not found in localStorage
+  return 5000;
 };
 
-// Function to get the current base URL
-const getBaseURL = () => `http://localhost:${getPort()}/api`;
+// Function to get the current base URL (supports production environment variable)
+export const getAPIBase = () => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL.replace(/\/api\/?$/, '');
+  }
+  return `http://localhost:${getPort()}`;
+};
+
+export const getBaseURL = () => `${getAPIBase()}/api`;
 
 const api = axios.create({
   baseURL: getBaseURL(),

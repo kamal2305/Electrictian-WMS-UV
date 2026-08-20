@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../../config/axios';
+import api, { getBaseURL } from '../../config/axios';
 import { toast } from 'react-toastify';
 import { FaArrowLeft, FaDownload, FaEdit, FaPrint, FaBolt } from 'react-icons/fa';
 
@@ -22,7 +22,7 @@ const InvoiceView = () => {
         if (invRes.data.success) setInvoice(invRes.data.data);
         if (settRes.data?.data) setSettings(settRes.data.data);
       } catch (err) {
-        toast.error('Failed to load invoice');
+        toast.error('Failed to load invoice details');
       } finally {
         setLoading(false);
       }
@@ -33,7 +33,7 @@ const InvoiceView = () => {
   const handleDownloadPDF = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/invoices/${id}/pdf`, {
+      const response = await fetch(`${getBaseURL()}/invoices/${id}/pdf`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('PDF download failed');

@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { getBaseURL } from '../config/axios';
 
 export const AuthContext = createContext();
 
@@ -106,7 +107,9 @@ export const AuthProvider = ({ children }) => {
         
         // Make API call if we have a token
         console.log('Loading fresh user data from API');
-        const res = await axios.get('http://localhost:5000/api/auth/me');
+        const res = await axios.get(`${getBaseURL()}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         
         if (!isMounted) return;
         
@@ -154,7 +157,7 @@ export const AuthProvider = ({ children }) => {
   // Register user
   const register = async (userData) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', userData);
+      const res = await axios.post(`${getBaseURL()}/auth/register`, userData);
       
       if (res.data.success) {
         // Ensure we have both id and _id properties for compatibility
@@ -187,10 +190,12 @@ export const AuthProvider = ({ children }) => {
       );
       return { success: false, message: err.response?.data?.message || 'Registration failed' };
     }
-  };  // Login user
+  };
+
+  // Login user
   const login = async (userData) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', userData);
+      const res = await axios.post(`${getBaseURL()}/auth/login`, userData);
       
       if (res.data.success && res.data.token) {
         // Make sure we have a token
@@ -240,7 +245,9 @@ export const AuthProvider = ({ children }) => {
       );
       return { success: false, message: err.response?.data?.message || 'Login failed' };
     }
-  };  // Logout user
+  };
+
+  // Logout user
   const logout = () => {
     // Clear all authentication data from localStorage
     localStorage.removeItem('token');
@@ -266,7 +273,7 @@ export const AuthProvider = ({ children }) => {
   // Update profile
   const updateProfile = async (userData) => {
     try {
-      const res = await axios.put('http://localhost:5000/api/auth/updateprofile', userData);
+      const res = await axios.put(`${getBaseURL()}/auth/updateprofile`, userData);
       
       if (res.data.success) {
         setUser(res.data.data);

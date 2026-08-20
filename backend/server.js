@@ -10,7 +10,9 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: process.env.CLIENT_URL 
+    ? [process.env.CLIENT_URL, 'http://localhost:3000', 'http://localhost:3001'] 
+    : true,
   credentials: true
 }));
 
@@ -43,6 +45,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`\x1b[32m✓ ElectroTrack API running on port ${PORT}\x1b[0m`));
+app.listen(PORT, '0.0.0.0', () => console.log(`\x1b[32m✓ ElectroTrack API running on port ${PORT}\x1b[0m`));
 
 module.exports = app;
