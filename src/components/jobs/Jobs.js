@@ -35,6 +35,7 @@ const Jobs = () => {
 
   useEffect(() => {
     fetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, priorityFilter]);
 
   const filteredJobs = jobs.filter(job => {

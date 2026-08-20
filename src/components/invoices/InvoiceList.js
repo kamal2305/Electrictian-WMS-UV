@@ -27,6 +27,7 @@ const InvoiceList = () => {
 
   useEffect(() => {
     fetchInvoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const handleDelete = async (id, invNum) => {
