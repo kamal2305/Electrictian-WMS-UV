@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api, { getBaseURL } from '../../config/axios';
 import { toast } from 'react-toastify';
@@ -10,7 +10,7 @@ const InvoiceList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     try {
       setLoading(true);
       const url = statusFilter ? `/invoices?status=${statusFilter}` : '/invoices';
@@ -23,12 +23,11 @@ const InvoiceList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     fetchInvoices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [fetchInvoices]);
 
   const handleDelete = async (id, invNum) => {
     if (!window.confirm(`Are you sure you want to delete invoice #${invNum}?`)) return;

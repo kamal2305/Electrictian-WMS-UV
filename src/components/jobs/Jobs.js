@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../config/axios';
@@ -13,7 +13,7 @@ const Jobs = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
       let url = '/jobs';
@@ -31,12 +31,11 @@ const Jobs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, priorityFilter]);
 
   useEffect(() => {
     fetchJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, priorityFilter]);
+  }, [fetchJobs]);
 
   const filteredJobs = jobs.filter(job => {
     const term = searchTerm.toLowerCase();
