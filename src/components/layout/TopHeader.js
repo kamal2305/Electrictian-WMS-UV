@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../common/ThemeToggle';
-import { FaBolt, FaBell, FaPlus } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 import './TopHeader.css';
 
 const formatRouteName = (pathname) => {

@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import {
   FaBriefcase, FaUsers, FaBoxes, FaFileInvoiceDollar,
   FaChartBar, FaPlus, FaArrowRight, FaCheckCircle,
-  FaClock, FaBolt, FaExclamationTriangle, FaShieldAlt
+  FaClock, FaBolt
 } from 'react-icons/fa';
 import { Bar } from 'react-chartjs-2';
 import { Chart, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend, Filler } from 'chart.js';
