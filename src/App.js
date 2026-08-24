@@ -87,7 +87,7 @@ const AppLayout = () => {
           </ErrorBoundary>
         </main>
       </div>
-      <ToastContainer position="top-right" autoClose={4000} />
+      {/* ToastContainer is at App root — no duplicate needed here */}
     </div>
   );
 };
@@ -155,6 +155,7 @@ const App = () => (
   <ThemeProvider>
     <AuthProvider>
       <RouterProvider router={router} />
+      <ToastContainer position="top-right" autoClose={4000} theme="dark" />
     </AuthProvider>
   </ThemeProvider>
 );

@@ -11,65 +11,74 @@
    ========================================================================== */
 
 :root {
-  /* === DARK HIGH-TECH THEME (Default) === */
+  /* ============================================================
+     CUSTOM COMBINED PALETTE (User's 3-row image)
+     Row 1 Neutrals · Row 2 Red Noir · Row 3 Citrus Lime
+     ============================================================ */
   --theme-mode: 'dark';
 
-  /* Surfaces & Canvas */
-  --bg: #090a0f;
-  --bg-canvas: #090a0f;
-  --bg-elevated: #0f121d;
-  --bg-surface: #131726;
-  --bg-card: rgba(19, 23, 38, 0.72);
-  --bg-card-hover: rgba(28, 33, 53, 0.85);
-  --bg-glass: rgba(15, 18, 29, 0.75);
+  /* Surfaces & Canvas — from Row 2 near-blacks + Row 1 charcoal */
+  --bg: #0d0706;
+  --bg-canvas: #0d0706;
+  --bg-elevated: #1c1a18;
+  --bg-surface: #14100f;
+  --bg-card: rgba(28, 26, 24, 0.78);
+  --bg-card-hover: rgba(40, 36, 33, 0.92);
+  --bg-glass: rgba(20, 16, 15, 0.80);
   --bg-input: rgba(255, 255, 255, 0.05);
-  --bg-input-focus: rgba(255, 255, 255, 0.09);
-  --bg-header: rgba(9, 10, 15, 0.82);
+  --bg-input-focus: rgba(212, 232, 74, 0.07);
+  --bg-header: rgba(13, 7, 6, 0.88);
 
   /* Sidebar */
-  --sidebar-bg: #0c0e17;
+  --sidebar-bg: #0a0504;
   --sidebar-width: 260px;
   --sidebar-collapsed: 72px;
 
-  /* Borders & Dividers */
-  --border: rgba(255, 255, 255, 0.09);
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-hover: rgba(99, 102, 241, 0.4);
-  --border-focus: #6366f1;
-  --border-glass: rgba(255, 255, 255, 0.12);
+  /* Borders — from Row 1 taupes */
+  --border: #3a3532;
+  --border-subtle: rgba(58, 53, 50, 0.55);
+  --border-hover: rgba(224, 22, 14, 0.45);
+  --border-focus: #e0160e;
+  --border-glass: rgba(224, 22, 14, 0.15);
 
-  /* Primary Brand (Electric Indigo / Sapphire) */
-  --primary: #6366f1;
-  --primary-hover: #818cf8;
-  --primary-active: #4f46e5;
-  --primary-dim: rgba(99, 102, 241, 0.15);
-  --primary-glow: rgba(99, 102, 241, 0.35);
+  /* Primary Brand — Row 2 Crimson Red */
+  --primary: #e0160e;
+  --primary-hover: #f54d47;
+  --primary-active: #b81009;
+  --primary-dim: rgba(224, 22, 14, 0.14);
+  --primary-glow: rgba(224, 22, 14, 0.38);
 
-  /* Secondary / Accent (Electric Cyan / Aqua) */
-  --accent: #06b6d4;
-  --accent-hover: #22d3ee;
-  --accent-dim: rgba(6, 182, 212, 0.15);
-  --accent-glow: rgba(6, 182, 212, 0.35);
+  /* Accent — Row 3 Chartreuse / Lime */
+  --accent: #d4e84a;
+  --accent-hover: #e2f26a;
+  --accent-dim: rgba(212, 232, 74, 0.14);
+  --accent-glow: rgba(212, 232, 74, 0.35);
+
+  /* Olive secondary (Row 3 dark shades) */
+  --teal: #a8b83a;
+  --teal-hover: #bfcc52;
+  --teal-dim: rgba(168, 184, 58, 0.14);
+  --teal-glow: rgba(168, 184, 58, 0.32);
 
   /* Status Colors */
-  --success: #10b981;
-  --success-dim: rgba(16, 185, 129, 0.15);
-  --warning: #f59e0b;
-  --warning-dim: rgba(245, 158, 11, 0.15);
-  --danger: #ef4444;
-  --danger-dim: rgba(239, 68, 68, 0.15);
-  --info: #3b82f6;
-  --info-dim: rgba(59, 130, 246, 0.15);
-  --purple: #a855f7;
-  --purple-dim: rgba(168, 85, 247, 0.15);
+  --success: #a8b83a;
+  --success-dim: rgba(168, 184, 58, 0.15);
+  --warning: #d4e84a;
+  --warning-dim: rgba(212, 232, 74, 0.14);
+  --danger: #f54d47;
+  --danger-dim: rgba(245, 77, 71, 0.15);
+  --info: #c8b5a8;
+  --info-dim: rgba(200, 181, 168, 0.14);
+  --purple: #f2cece;
+  --purple-dim: rgba(242, 206, 206, 0.12);
 
-  /* Typography Colors */
-  --text: #f1f5f9;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  --text-inverse: #090a0f;
+  /* Typography — Row 1 lights + warm whites */
+  --text: #e0dede;
+  --text-primary: #f5f4f4;
+  --text-secondary: #c8b5a8;
+  --text-muted: #7d7368;
+  --text-dim: #4d4743;
+  --text-inverse: #0d0706;
 
   /* Sizing & Radius Tokens */
   --radius-xs: 4px;
@@ -80,12 +89,12 @@
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Shadows & Glows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.25);
-  --shadow-cyan-glow: 0 0 24px rgba(6, 182, 212, 0.25);
+  /* Shadows & Glows — red-tinted deep shadows */
+  --shadow-sm: 0 2px 8px rgba(13, 7, 6, 0.55);
+  --shadow: 0 8px 32px rgba(13, 7, 6, 0.70);
+  --shadow-lg: 0 16px 48px rgba(13, 7, 6, 0.85);
+  --shadow-glow: 0 0 24px rgba(224, 22, 14, 0.30);
+  --shadow-cyan-glow: 0 0 24px rgba(212, 232, 74, 0.28);
 
   /* Transitions & Motion */
   --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -93,77 +102,88 @@
   --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+
 /* ==========================================================================
    02. LIGHT CRISP THEME TOKENS
    ========================================================================== */
 
 [data-theme="light"] {
+  /* ============================================================
+     CUSTOM LIGHT — Row 1 Neutrals + Row 2 Red + Row 3 Citrus
+     ============================================================ */
   --theme-mode: 'light';
 
-  /* Surfaces & Canvas */
-  --bg: #f8fafc;
-  --bg-canvas: #f8fafc;
+  /* Surfaces — Row 1 whites & linens */
+  --bg: #f5f4f2;
+  --bg-canvas: #f5f4f2;
   --bg-elevated: #ffffff;
-  --bg-surface: #f1f5f9;
-  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-surface: #e0dede;
+  --bg-card: rgba(255, 255, 255, 0.94);
   --bg-card-hover: #ffffff;
-  --bg-glass: rgba(255, 255, 255, 0.85);
-  --bg-input: #f1f5f9;
+  --bg-glass: rgba(255, 255, 255, 0.90);
+  --bg-input: #eeecea;
   --bg-input-focus: #ffffff;
-  --bg-header: rgba(255, 255, 255, 0.88);
+  --bg-header: rgba(245, 244, 242, 0.92);
 
-  /* Sidebar */
-  --sidebar-bg: #0f172a;
+  /* Sidebar — keep dark charcoal */
+  --sidebar-bg: #1c1a18;
   --sidebar-width: 260px;
   --sidebar-collapsed: 72px;
 
-  /* Borders & Dividers */
-  --border: #e2e8f0;
-  --border-subtle: #edf2f7;
-  --border-hover: rgba(99, 102, 241, 0.5);
-  --border-focus: #6366f1;
-  --border-glass: rgba(0, 0, 0, 0.08);
+  /* Borders — Row 1 beige/linen */
+  --border: #c8b5a8;
+  --border-subtle: #ddd4ce;
+  --border-hover: rgba(184, 16, 9, 0.45);
+  --border-focus: #b81009;
+  --border-glass: rgba(200, 181, 168, 0.25);
 
-  /* Primary Brand */
-  --primary: #4f46e5;
-  --primary-hover: #6366f1;
-  --primary-active: #4338ca;
-  --primary-dim: rgba(79, 70, 229, 0.1);
-  --primary-glow: rgba(79, 70, 229, 0.2);
+  /* Primary — Row 2 deep red (lighter variant for light bg) */
+  --primary: #b81009;
+  --primary-hover: #e0160e;
+  --primary-active: #8e0b06;
+  --primary-dim: rgba(184, 16, 9, 0.10);
+  --primary-glow: rgba(184, 16, 9, 0.22);
 
-  /* Secondary / Accent */
-  --accent: #0891b2;
-  --accent-hover: #06b6d4;
-  --accent-dim: rgba(8, 145, 178, 0.1);
-  --accent-glow: rgba(8, 145, 178, 0.2);
+  /* Accent — Row 3 Olive (darker for light bg) */
+  --accent: #6b7628;
+  --accent-hover: #a8b83a;
+  --accent-dim: rgba(107, 118, 40, 0.12);
+  --accent-glow: rgba(107, 118, 40, 0.22);
+
+  /* Olive secondary */
+  --teal: #6b7628;
+  --teal-hover: #a8b83a;
+  --teal-dim: rgba(107, 118, 40, 0.12);
+  --teal-glow: rgba(107, 118, 40, 0.20);
 
   /* Status Colors */
-  --success: #059669;
-  --success-dim: rgba(5, 150, 105, 0.12);
-  --warning: #d97706;
-  --warning-dim: rgba(217, 119, 6, 0.12);
-  --danger: #dc2626;
-  --danger-dim: rgba(220, 38, 38, 0.12);
-  --info: #2563eb;
-  --info-dim: rgba(37, 99, 235, 0.12);
-  --purple: #9333ea;
-  --purple-dim: rgba(147, 51, 234, 0.12);
+  --success: #5a6d1a;
+  --success-dim: rgba(90, 109, 26, 0.12);
+  --warning: #8e7200;
+  --warning-dim: rgba(142, 114, 0, 0.12);
+  --danger: #b81009;
+  --danger-dim: rgba(184, 16, 9, 0.12);
+  --info: #7d7368;
+  --info-dim: rgba(125, 115, 104, 0.12);
+  --purple: #3d0a08;
+  --purple-dim: rgba(61, 10, 8, 0.10);
 
-  /* Typography Colors */
-  --text: #0f172a;
-  --text-primary: #020617;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  --text-dim: #94a3b8;
-  --text-inverse: #ffffff;
+  /* Typography — Row 1 dark charcoals + maroon depths */
+  --text: #1c1a18;
+  --text-primary: #0d0706;
+  --text-secondary: #4d4743;
+  --text-muted: #7d7368;
+  --text-dim: #c8b5a8;
+  --text-inverse: #f5f4f2;
 
   /* Shadows */
-  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.06);
-  --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.12);
-  --shadow-glow: 0 4px 16px rgba(79, 70, 229, 0.15);
-  --shadow-cyan-glow: 0 4px 16px rgba(8, 145, 178, 0.15);
+  --shadow-sm: 0 2px 6px rgba(28, 26, 24, 0.08);
+  --shadow: 0 8px 24px rgba(28, 26, 24, 0.11);
+  --shadow-lg: 0 16px 36px rgba(28, 26, 24, 0.16);
+  --shadow-glow: 0 4px 16px rgba(184, 16, 9, 0.18);
+  --shadow-cyan-glow: 0 4px 16px rgba(107, 118, 40, 0.18);
 }
+
 
 /* ==========================================================================
    03. BASE STYLES & RESET
