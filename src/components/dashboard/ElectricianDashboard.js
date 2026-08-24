@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../config/axios';
 import { toast } from 'react-toastify';
+import {
+  FaBriefcase, FaCheckCircle, FaBoxes, FaClock,
+  FaBolt, FaMapMarkerAlt, FaCalendarAlt, FaPlus, FaArrowRight
+} from 'react-icons/fa';
 import './Dashboard.css';
 
 const ElectricianDashboard = () => {
@@ -20,18 +24,16 @@ const ElectricianDashboard = () => {
     quantity: '',
     unit: '',
     description: ''
-  });  const fetchDashboardData = useCallback(async () => {
-    // Don't attempt to fetch data if user or user ID isn't available
+  });
+
+  const fetchDashboardData = useCallback(async () => {
     if (!user || !user.id) {
-      console.log('User or user ID not available yet, waiting...');
       setLoading(true);
       return;
     }
-    
-    // Prevent excessive API calls by checking if we've fetched recently
+
     const lastFetchTime = sessionStorage.getItem('lastElectricianDashboardFetch');
-    if (lastFetchTime && (Date.now() - parseInt(lastFetchTime) < 30000)) { // 30 seconds
-      console.log('Skipping fetch - data was requested recently');
+    if (lastFetchTime && (Date.now() - parseInt(lastFetchTime) < 30000)) {
       const cachedData = sessionStorage.getItem(`electricianDashboardData_${user.id}`);
       if (cachedData) {
         try {
@@ -40,59 +42,45 @@ const ElectricianDashboard = () => {
           return;
         } catch (error) {
           console.error('Error parsing cached dashboard data:', error);
-          // Continue with fetch if parse fails
         }
       }
     }
-    
-    console.log('Fetching dashboard data for electrician ID:', user.id);
-    
+
     try {
       setLoading(true);
       const response = await api.get(`/dashboard/electrician/${user.id}/stats`);
       if (response.data && response.data.success && response.data.data) {
-        console.log('Dashboard data received');
-        
-        // Only call repair endpoint once per session, and only if needed
         if (!window.materialRepairCalled && !sessionStorage.getItem('materialRepairCompleted')) {
-          console.log('Verifying material usage data integrity...');
           try {
             window.materialRepairCalled = true;
-            // Call repair endpoint for data verification and potential repair
             const repairResponse = await api.post(`/dashboard/electrician/${user.id}/repair-materials`);
             if (repairResponse.data && repairResponse.data.success) {
-              console.log('Material usage data verification complete');
               sessionStorage.setItem('materialRepairCompleted', 'true');
-              
-              // Always use the repaired material count, which should be more reliable
               if (repairResponse.data.data && repairResponse.data.data.totalMaterials !== undefined) {
-                console.log('Updated total materials count');
                 response.data.data.totalMaterials = repairResponse.data.data.totalMaterials;
               }
             }
           } catch (repairError) {
             console.error('Error verifying material usage data');
-            // Continue with original count if verification fails
           }
         }
-          const dashboardData = {
+
+        const formattedData = {
           activeJobs: response.data.data.activeJobs || [],
           completedJobs: response.data.data.completedJobs || [],
           totalMaterials: response.data.data.totalMaterials || 0,
           hoursLogged: response.data.data.hoursLogged || 0
         };
-        
-        // Store the dashboard data in sessionStorage for later use
+
         try {
-          sessionStorage.setItem(`electricianDashboardData_${user.id}`, JSON.stringify(dashboardData));
+          sessionStorage.setItem(`electricianDashboardData_${user.id}`, JSON.stringify(formattedData));
           sessionStorage.setItem('lastDashboardFetch', new Date().getTime().toString());
         } catch (error) {
           console.error('Error storing dashboard data in sessionStorage:', error);
         }
-        
-        setDashboardData(dashboardData);
+
+        setDashboardData(formattedData);
       } else {
-        console.log('Response successful but no data found');
         setDashboardData({
           activeJobs: [],
           completedJobs: [],
@@ -102,55 +90,41 @@ const ElectricianDashboard = () => {
       }
     } catch (error) {
       console.error('Dashboard data error:', error);
-      toast.error('Error fetching dashboard data');
+      toast.error('Error fetching technician metrics');
     } finally {
       setLoading(false);
     }
-  }, [user]);  useEffect(() => {
-    // Track if the component is mounted
+  }, [user]);
+
+  useEffect(() => {
     let isMounted = true;
-    
-    // Only fetch dashboard data if user is loaded and authenticated
     if (user && user.id) {
-      console.log('User loaded, checking for dashboard data...', user.id);
-      
-      // Try to get cached dashboard data first
       const cachedDashboardData = sessionStorage.getItem(`electricianDashboardData_${user.id}`);
       const lastFetch = sessionStorage.getItem('lastElectricianDashboardFetch');
       const cacheAge = lastFetch ? Date.now() - Number(lastFetch) : Infinity;
-      const cacheFresh = cacheAge < 60000; // 1 minute
-      
+      const cacheFresh = cacheAge < 60000;
+
       if (cachedDashboardData && cacheFresh) {
         try {
           const parsedData = JSON.parse(cachedDashboardData);
-          console.log('Using cached dashboard data');
           setDashboardData(parsedData);
           setLoading(false);
         } catch (error) {
-          console.error('Error parsing cached dashboard data:', error);
-          // If there's an error parsing the cached data, fetch fresh data
           fetchDashboardData();
         }
       } else {
-        // No cached data, fetch fresh data
         fetchDashboardData();
       }
     } else {
-      console.log('User not loaded yet, checking localStorage...');
-      
-      // Try to get user data from localStorage as backup
       const cachedUser = localStorage.getItem('userData');
       if (cachedUser) {
         try {
           const parsedUser = JSON.parse(cachedUser);
           if (parsedUser && parsedUser.id && isMounted) {
-            console.log('Using cached user data for dashboard fetch:', parsedUser.id);
-            // Temporarily set the user data for the API call
-            setDashboardData(prev => ({...prev, loading: true}));
+            setDashboardData(prev => ({ ...prev, loading: true }));
             api.get(`/dashboard/electrician/${parsedUser.id}/stats`)
               .then(response => {
                 if (response.data && response.data.success && response.data.data && isMounted) {
-                  console.log('Dashboard data received from cached user:', response.data.data);
                   setDashboardData({
                     activeJobs: response.data.data.activeJobs || [],
                     completedJobs: response.data.data.completedJobs || [],
@@ -160,31 +134,28 @@ const ElectricianDashboard = () => {
                 }
                 if (isMounted) setLoading(false);
               })
-              .catch(err => {
-                console.error('Error fetching with cached credentials:', err);
+              .catch(() => {
                 if (isMounted) setLoading(false);
               });
           }
         } catch (err) {
           console.error('Error parsing cached user data', err);
         }
-      } else {
-        console.log('No cached user data found, waiting for auth context');
       }
     }
-    
-    // Cleanup function to prevent memory leaks and state updates after unmount
+
     return () => {
       isMounted = false;
-      console.log('Dashboard component unmounted, cleanup performed');
     };
-  }, [fetchDashboardData, user]);const handleMaterialSubmit = async (e) => {
+  }, [fetchDashboardData, user]);
+
+  const handleMaterialSubmit = async (e) => {
     e.preventDefault();
     if (!selectedJob) {
       toast.error('Please select a job first');
       return;
-    }    // Enhanced validation of the form data before submission
-    // Ensure quantity is a valid positive number
+    }
+
     const quantity = parseFloat(materialForm.quantity);
     if (isNaN(quantity) || quantity <= 0) {
       toast.error('Please enter a valid positive quantity');
@@ -200,228 +171,262 @@ const ElectricianDashboard = () => {
       toast.error('Please enter a unit of measurement');
       return;
     }
-      try {
-      // Prepare data with valid numeric quantity - ensure all required fields are present
+
+    try {
       const materialData = {
         name: materialForm.name.trim(),
-        quantity: quantity, // Send as a number, not a string
+        quantity: quantity,
         unit: materialForm.unit.trim(),
         description: materialForm.description,
-        job: selectedJob._id, // Explicitly include job ID
+        job: selectedJob._id,
         addedBy: user.id
       };
-      
-      console.log('Submitting material with data:', materialData);
-      
-      // First, create the material
+
       const materialResponse = await api.post(`/jobs/${selectedJob._id}/materials`, materialData);
-        if (materialResponse.data && materialResponse.data.success) {
-        // Material created successfully, now create the material usage record
-        console.log('Material created with ID:', materialResponse.data.data._id);
-        
-        // Then create a material usage record to track this electrician's usage
+      if (materialResponse.data && materialResponse.data.success) {
         try {
-          // Prepare usage data with all required fields
           const usageData = {
             materialId: materialResponse.data.data._id,
             electricianId: user.id,
-            quantity: quantity, // Send as a number, not a string
+            quantity: quantity,
             notes: materialForm.description || 'Added from dashboard'
           };
-          
-          console.log('Creating material usage with data:', usageData);
-          const usageResponse = await api.post(`/jobs/${selectedJob._id}/material-usage`, usageData);
-          
-          console.log('Material usage created successfully:', usageResponse.data);
+          await api.post(`/jobs/${selectedJob._id}/material-usage`, usageData);
         } catch (usageError) {
           console.error('Error adding material usage record:', usageError);
-          
-          if (usageError.response && usageError.response.data) {
-            console.error('Error response details:', usageError.response.data);
-          }
-          
-          // Continue even if this fails, as the material was still created
-          toast.warning('Material added but usage tracking had an error');
         }
 
-        toast.success('Material added successfully');
+        toast.success('Material logged successfully');
         setMaterialForm({
           name: '',
           quantity: '',
           unit: '',
           description: ''
         });
-        
-        // Reload dashboard data to reflect new material usage
         fetchDashboardData();
-      }    } catch (error) {
-      console.error('Error adding material:', error);
-      
-      // Enhanced error logging to help diagnose issues
-      if (error.response) {
-        console.error('Error response status:', error.response.status);
-        console.error('Error response data:', error.response.data);
-        
-        // Provide more specific error messages based on the response
-        if (error.response.status === 400) {
-          // Handle validation errors
-          const message = error.response.data.message;
-          if (Array.isArray(message)) {
-            // If validation returned multiple errors, show them all
-            message.forEach(msg => toast.error(msg));
-          } else {
-            toast.error(`Validation Error: ${message || 'Please check your inputs'}`);
-          }
-        } else if (error.response.status === 404) {
-          toast.error('Resource not found. The job may have been deleted.');
-        } else if (error.response.status === 403) {
-          toast.error('Not authorized to add materials to this job.');
-        } else {
-          // Generic error with the message from the server
-          toast.error(`Error: ${error.response.data.message || 'Something went wrong'}`);
-        }
-      } else if (error.request) {
-        // Request was made but no response was received
-        toast.error('No response from server. Please check your connection and try again.');
-      } else {
-        // Generic error handling
-        toast.error('Error adding material. Please check your inputs and try again.');
       }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Error adding material. Please verify inputs.');
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading dashboard...</div>;
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <span>Syncing field workstation...</span>
+      </div>
+    );
   }
+
+  const statCards = [
+    { label: 'Active Assigned Jobs', value: dashboardData.activeJobs?.length || 0, icon: FaBriefcase, color: '#6366f1', bg: 'rgba(99,102,241,0.15)' },
+    { label: 'Completed Tickets', value: dashboardData.completedJobs?.length || 0, icon: FaCheckCircle, color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
+    { label: 'Materials Consumed', value: dashboardData.totalMaterials, icon: FaBoxes, color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+    { label: 'Total Hours Logged', value: `${dashboardData.hoursLogged}h`, icon: FaClock, color: '#06b6d4', bg: 'rgba(6,182,212,0.15)' },
+  ];
 
   return (
     <div className="dashboard-container">
-      <div className="dashboard-header">
-        <h1>Welcome, {user.name}</h1>
-        <p>Your Electrician Dashboard</p>
+      {/* Field Workstation Hero */}
+      <div className="dashboard-hero-banner glow-accent">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '4px 10px', background: 'var(--primary-dim)', borderRadius: 20, border: '1px solid rgba(99,102,241,0.3)', fontSize: 11, fontWeight: 700, color: 'var(--primary-hover)' }}>
+              <FaBolt /> FIELD TECHNICIAN STATION
+            </div>
+            <h1 className="dashboard-hero-title">
+              Welcome Back, {user?.name}
+            </h1>
+            <p className="dashboard-hero-sub">
+              You currently have <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{dashboardData.activeJobs?.length || 0} active jobs</span> in your queue.
+            </p>
+          </div>
+          <Link to="/jobs" className="btn btn-primary">
+            <FaBriefcase /> <span>My Full Job Queue</span>
+          </Link>
+        </div>
       </div>
 
+      {/* KPI Ribbon */}
       <div className="stats-grid">
-        <div className="stat-card">
-          <h3>Active Jobs</h3>
-          <div className="stat-value">{dashboardData.activeJobs?.length || 0}</div>
-        </div>
-        <div className="stat-card">
-          <h3>Completed Jobs</h3>
-          <div className="stat-value">{dashboardData.completedJobs?.length || 0}</div>
-        </div>
-        <div className="stat-card">
-          <h3>Materials Used</h3>
-          <div className="stat-value">{dashboardData.totalMaterials}</div>
-        </div>
-        <div className="stat-card">
-          <h3>Hours Logged</h3>
-          <div className="stat-value">{dashboardData.hoursLogged}</div>
-        </div>
+        {statCards.map(({ label, value, icon: Icon, color, bg }) => (
+          <div className="stat-card" key={label}>
+            <div className="stat-icon" style={{ background: bg, color }}>
+              <Icon />
+            </div>
+            <div className="stat-card-label">{label}</div>
+            <div className="stat-card-value" style={{ color }}>{value}</div>
+          </div>
+        ))}
       </div>
 
-      <div className="jobs-section">
-        <h2>Your Active Jobs</h2>
-        <div className="jobs-grid">
-          {dashboardData.activeJobs && dashboardData.activeJobs.length > 0 ? (
-            dashboardData.activeJobs.map(job => (
-              <div 
-                key={job._id} 
-                className={`job-card ${selectedJob?._id === job._id ? 'selected' : ''}`}
-                onClick={() => setSelectedJob(job)}
-              >
-                <h3>{job.title}</h3>
-                <p className="job-location">{job.location}</p>
-                <p className="job-date">Due: {new Date(job.dueDate).toLocaleDateString()}</p>
-                <div className="job-status">
-                  <span className={`status-badge ${job.status.toLowerCase()}`}>
-                    {job.status}
-                  </span>
+      {/* Bento Grid: Active Jobs Queue + Material Usage Station */}
+      <div className="bento-grid">
+        {/* Active Jobs Queue */}
+        <div className="bento-col-7" style={{ gridColumn: selectedJob ? 'span 7' : 'span 12' }}>
+          <div className="bento-tile" style={{ padding: 24, height: '100%' }}>
+            <div className="flex items-center justify-between mb-2">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="pulse-indicator"></span>
+                <h3 style={{ fontSize: 16, fontWeight: 700 }}>Active Job Queue</h3>
+              </div>
+              <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>Click a job to log materials</span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+              {dashboardData.activeJobs && dashboardData.activeJobs.length > 0 ? (
+                dashboardData.activeJobs.map(job => {
+                  const isSelected = selectedJob?._id === job._id;
+                  return (
+                    <div
+                      key={job._id}
+                      className="card"
+                      style={{
+                        padding: 16,
+                        borderColor: isSelected ? 'var(--primary)' : 'var(--border)',
+                        background: isSelected ? 'var(--primary-dim)' : 'var(--bg-card)',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setSelectedJob(job)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <h4 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{job.title}</h4>
+                        <span className="badge badge-info" style={{ textTransform: 'capitalize' }}>
+                          {job.status}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <FaMapMarkerAlt style={{ color: 'var(--accent)' }} /> {job.location || 'Site Location'}
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <FaCalendarAlt /> Due: {job.dueDate ? new Date(job.dueDate).toLocaleDateString() : 'TBD'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
+                        <span style={{ fontSize: 11, color: isSelected ? 'var(--primary-hover)' : 'var(--text-dim)', fontWeight: 600 }}>
+                          {isSelected ? '✓ Selected for material logging' : 'Click to select'}
+                        </span>
+                        <Link to={`/jobs/${job._id}`} className="btn btn-outline btn-sm" onClick={e => e.stopPropagation()}>
+                          View Details <FaArrowRight style={{ fontSize: 10 }} />
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="empty-state" style={{ padding: '36px 20px' }}>
+                  <p>No active jobs currently assigned to you.</p>
                 </div>
-                <Link to={`/jobs/${job._id}`} className="view-details">
-                  View Details
-                </Link>
-              </div>
-            ))
-          ) : (
-            <p className="no-jobs">No active jobs found</p>
-          )}
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Selected Job Material Logging Station */}
+        {selectedJob && (
+          <div className="bento-col-5" style={{ gridColumn: 'span 5' }}>
+            <div className="bento-tile glow-accent" style={{ padding: 24, height: '100%' }}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 style={{ fontSize: 15, fontWeight: 700 }}>Log Materials</h3>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setSelectedJob(null)}
+                >
+                  Close
+                </button>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+                Adding items to <strong style={{ color: 'var(--text-primary)' }}>{selectedJob.title}</strong>
+              </p>
+
+              <form onSubmit={handleMaterialSubmit}>
+                <div className="form-group">
+                  <label>Material Name / SKU</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., 2.5mm Copper Cable, MCB 16A"
+                    value={materialForm.name}
+                    onChange={(e) => setMaterialForm({ ...materialForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="form-group">
+                    <label>Quantity</label>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      placeholder="e.g. 10"
+                      value={materialForm.quantity}
+                      onChange={(e) => setMaterialForm({ ...materialForm, quantity: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Unit</label>
+                    <input
+                      type="text"
+                      placeholder="meters, pcs, coils"
+                      value={materialForm.unit}
+                      onChange={(e) => setMaterialForm({ ...materialForm, unit: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Usage Notes</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Where/how this material was installed..."
+                    value={materialForm.description}
+                    onChange={(e) => setMaterialForm({ ...materialForm, description: e.target.value })}
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary btn-block">
+                  <FaPlus /> Submit Material Log
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
 
-      {selectedJob && (
-        <div className="material-section">
-          <h2>Add Materials for {selectedJob.title}</h2>          <form onSubmit={handleMaterialSubmit} className="material-form">
-            <div className="form-group">
-              <label>Material Name</label>
-              <input
-                type="text"
-                placeholder="e.g., Wire, Cable, Outlet"
-                value={materialForm.name}
-                onChange={(e) => setMaterialForm({...materialForm, name: e.target.value})}
-                required
-              />
-            </div>
-            <div className="form-row">              <div className="form-group">
-                <label>Quantity</label>
-                <input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  placeholder="Enter quantity (e.g., 5.5)"
-                  value={materialForm.quantity}
-                  onChange={(e) => setMaterialForm({...materialForm, quantity: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Unit</label>
-                <input
-                  type="text"
-                  placeholder="e.g., meters, pieces, kg"
-                  value={materialForm.unit}
-                  onChange={(e) => setMaterialForm({...materialForm, unit: e.target.value})}
-                  required
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Description</label>
-              <textarea
-                value={materialForm.description}
-                onChange={(e) => setMaterialForm({...materialForm, description: e.target.value})}
-              />
-            </div>
-            <button type="submit" className="submit-button">
-              Add Material
-            </button>
-          </form>
+      {/* Completed Jobs History */}
+      <div className="bento-tile" style={{ padding: 24, marginTop: 24 }}>
+        <div className="section-header" style={{ marginBottom: 16 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700 }}>Recently Completed Work</h3>
+          <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>Archived tickets</span>
         </div>
-      )}
-
-      <div className="completed-jobs-section">
-        <h2>Recently Completed Jobs</h2>
-        <div className="completed-jobs-grid">
-          {dashboardData.completedJobs && dashboardData.completedJobs.length > 0 ? (
-            dashboardData.completedJobs.slice(0, 3).map(job => (
-              <div key={job._id} className="completed-job-card">
-                <h3>{job.title}</h3>
-                <p className="job-location">{job.location}</p>
-                <p className="completion-date">
-                  Completed: {new Date(job.completedAt).toLocaleDateString()}
+        {dashboardData.completedJobs && dashboardData.completedJobs.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            {dashboardData.completedJobs.slice(0, 4).map(job => (
+              <div key={job._id} className="card" style={{ padding: 18 }}>
+                <div className="flex items-center justify-between mb-1">
+                  <h4 style={{ fontSize: 14, fontWeight: 700 }}>{job.title}</h4>
+                  <span className="badge badge-success">Done</span>
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                  <FaMapMarkerAlt style={{ color: 'var(--accent)', marginRight: 4 }} /> {job.location || 'Completed on site'}
                 </p>
-                <Link to={`/jobs/${job._id}`} className="view-details">
-                  View Details
-                </Link>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, fontSize: 11, color: 'var(--text-dim)' }}>
+                  <span>{job.completedAt ? new Date(job.completedAt).toLocaleDateString() : 'Completed'}</span>
+                  <Link to={`/jobs/${job._id}`} style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                    Details →
+                  </Link>
+                </div>
               </div>
-            ))
-          ) : (
-            <p className="no-jobs">No completed jobs found</p>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>No completed jobs recorded yet.</p>
+        )}
       </div>
     </div>
   );
 };
 
-export default ElectricianDashboard; 
+export default ElectricianDashboard;

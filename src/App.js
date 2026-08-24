@@ -6,7 +6,9 @@ import './index.css';
 import './App.css';
 
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Sidebar from './components/layout/Sidebar';
+import TopHeader from './components/layout/TopHeader';
 import Home from './components/layout/Home';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
@@ -41,7 +43,7 @@ const Settings           = lazy(() => import('./components/settings/Settings'));
 const Spinner = () => (
   <div className="loading-container">
     <div className="spinner"></div>
-    <span>Loading...</span>
+    <span>Loading system...</span>
   </div>
 );
 
@@ -62,7 +64,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// App Layout with Sidebar
+// App Layout with Sidebar and TopHeader
 const AppLayout = () => {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true');
   const toggle = () => {
@@ -75,16 +77,17 @@ const AppLayout = () => {
   return (
     <div className={`App ${collapsed ? 'sidebar-collapsed' : ''}`}>
       <Sidebar collapsed={collapsed} onToggle={toggle} />
-      <main className="main-content">
-        <div className="main-content-inner">
+      <div className="main-content">
+        <TopHeader />
+        <main className="main-content-inner">
           <ErrorBoundary>
             <Suspense fallback={<Spinner />}>
               <Outlet />
             </Suspense>
           </ErrorBoundary>
-        </div>
-      </main>
-      <ToastContainer position="top-right" autoClose={4000} theme="dark" />
+        </main>
+      </div>
+      <ToastContainer position="top-right" autoClose={4000} />
     </div>
   );
 };
@@ -149,9 +152,11 @@ const router = createBrowserRouter(
 );
 
 const App = () => (
-  <AuthProvider>
-    <RouterProvider router={router} />
-  </AuthProvider>
+  <ThemeProvider>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  </ThemeProvider>
 );
 
 export default App;

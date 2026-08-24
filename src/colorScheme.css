@@ -1,124 +1,80 @@
-/* Color Scheme for Electrician Work Management System - Blue Theme */
+/* Color Scheme integration for ElectroTrack WMS (Dual-Theme Compliant) */
 
 :root {
-  /* Primary Colors */
-  --primary-color: #057dcd;        /* Main brand color - blue */
-  --primary-light: #43b0f1;        /* Accent color - lighter blue */
-  --primary-ultra-light: #6dc0f1;  /* Light blue */
-  
+  /* Legacy mapping aliases mapped directly to Universal Design Tokens */
+  --primary-color: var(--primary);
+  --primary-light: var(--primary-hover);
+  --primary-ultra-light: var(--primary-dim);
+
   /* Background Colors */
-  --bg-off-white: #e8eef1;        /* Light background */
-  --bg-white: #bfdff1;            /* Base background */
-  --bg-dark: #1e3d58;             /* Dark background */
-  
+  --bg-off-white: var(--bg-canvas);
+  --bg-white: var(--bg-card);
+  --bg-dark: var(--bg-elevated);
+
   /* Text Colors */
-  --text-dark: #1e3d58;           /* Dark text for light backgrounds */
-  --text-medium: #057dcd;         /* Medium text */
-  --text-light: #43b0f1;          /* Light text */
+  --text-dark: var(--text);
+  --text-medium: var(--text-secondary);
+  --text-light: var(--text-muted);
+
   /* Status Colors */
-  --status-success: #6dc0f1;      /* Success/completed */
-  --status-warning: #96cff1;      /* Warnings/pending */
-  --status-error: #057dcd;        /* Errors/critical */
-  --status-info: #abd7f1;         /* Info/in-progress */
-  
+  --status-success: var(--success);
+  --status-warning: var(--warning);
+  --status-error: var(--danger);
+  --status-info: var(--info);
+
   /* UI Element Colors */
-  --border-color: #1e3d58;        /* Border color */
-  --shadow-color: rgba(30, 61, 88, 0.2); /* Shadow color */
-  --hover-color: rgba(5, 125, 205, 0.1); /* Hover state */
-  --active-color: rgba(67, 176, 241, 0.3); /* Active state */
-    /* Button Colors */
-  --btn-primary: #057dcd;         /* Primary button */  
-  --btn-primary-hover: #43b0f1;   /* Primary button hover */
-  --btn-secondary: #6dc0f1;       /* Secondary button */
-  --btn-secondary-hover: #96cff1; /* Secondary button hover */
-  --btn-text: #ffffff;            /* Button text */
-    /* Form Element Colors */
-  --input-bg: #e8eef1;            /* Input background */
-  --input-border: #abd7f1;        /* Input border */
-  --input-focus: #057dcd;         /* Input focus border */
-  
-  /* Chart and Visualization Colors */
-  --chart-color-1: #057dcd;       /* Main color */
-  --chart-color-2: #43b0f1;       /* Secondary color */
-  --chart-color-3: #6dc0f1;       /* Tertiary color */
-  --chart-color-4: #96cff1;       /* Fourth color */
-  --chart-color-5: #abd7f1;       /* Fifth color */
+  --border-color: var(--border);
+  --shadow-color: var(--shadow);
+  --hover-color: var(--primary-dim);
+  --active-color: var(--primary-glow);
+
+  /* Button Colors */
+  --btn-primary: var(--primary);
+  --btn-primary-hover: var(--primary-hover);
+  --btn-secondary: var(--bg-card);
+  --btn-secondary-hover: var(--bg-card-hover);
+  --btn-text: #ffffff;
+
+  /* Form Element Colors */
+  --input-bg: var(--bg-input);
+  --input-border: var(--border);
+  --input-focus: var(--primary);
+
+  /* Chart Colors */
+  --chart-color-1: #6366f1;
+  --chart-color-2: #06b6d4;
+  --chart-color-3: #10b981;
+  --chart-color-4: #f59e0b;
+  --chart-color-5: #a855f7;
 }
 
-/* Status Badge Colors */
+/* Status Badge mapping */
 .status-badge.pending {
-  background-color: var(--status-warning);
-  color: var(--text-dark);
+  background-color: var(--warning-dim);
+  color: var(--warning);
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .status-badge.in-progress {
-  background-color: var(--status-info);
-  color: var(--text-dark);
+  background-color: var(--info-dim);
+  color: var(--info);
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .status-badge.completed {
-  background-color: var(--status-success);
-  color: var(--text-dark);
+  background-color: var(--success-dim);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .status-badge.cancelled {
-  background-color: var(--bg-dark);
-  color: var(--bg-white);
+  background-color: var(--danger-dim);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .status-badge.overdue {
-  background-color: var(--status-error);
-  color: white;
-}
-
-/* Button Styling */
-.btn-primary {
-  background-color: var(--btn-primary);
-  color: var(--btn-text);
-  border: none;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(5, 125, 205, 0.2);
-}
-
-/* Auth Button Styling - for login and register */
-.auth-card .btn-primary, .btn-block {
-  background-color: var(--btn-primary);
-  color: var(--btn-text);
-  border: none;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  box-shadow: 0 3px 6px rgba(5, 125, 205, 0.25);
-  margin-top: 10px;
-}
-
-.btn-primary:hover {
-  background-color: var(--btn-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(5, 125, 205, 0.3);
-}
-
-/* Auth Button Hover Styling */
-.auth-card .btn-primary:hover, .btn-block:hover {
-  background-color: var(--btn-primary-hover);
-  transform: translateY(-3px);
-  box-shadow: 0 5px 10px rgba(5, 125, 205, 0.4);
-}
-
-.btn-secondary {
-  background-color: var(--btn-secondary);
-  color: var(--text-dark);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background-color: var(--btn-secondary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 2px 6px rgba(5, 125, 205, 0.15);
+  background-color: var(--danger-dim);
+  color: var(--danger);
+  border: 1px solid var(--danger);
 }

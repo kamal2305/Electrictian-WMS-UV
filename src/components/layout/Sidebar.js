@@ -17,6 +17,7 @@ const adminNavItems = [
   { to: '/analytics',          icon: FaChartLine,          label: 'Analytics' },
   { to: '/reports/attendance', icon: FaCalendarAlt,        label: 'Reports' },
 ];
+
 const electricianNavItems = [
   { to: '/dashboard', icon: FaTachometerAlt,     label: 'Dashboard' },
   { to: '/jobs',      icon: FaBriefcase,         label: 'My Jobs' },
@@ -34,29 +35,34 @@ const Sidebar = ({ collapsed, onToggle }) => {
   };
 
   const navItems = user?.role === 'admin' ? adminNavItems : electricianNavItems;
-  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U';
+  const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
 
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      {/* Header */}
+      {/* Brand Header */}
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <FaBolt color="#fff" />
+          <FaBolt />
         </div>
         {!collapsed && (
           <div className="sidebar-brand">
             <div className="sidebar-brand-name">ElectroTrack</div>
-            <div className="sidebar-brand-sub">WMS</div>
+            <div className="sidebar-brand-sub">ENTERPRISE WMS</div>
           </div>
         )}
-        <button className="sidebar-toggle" onClick={onToggle} title={collapsed ? 'Expand' : 'Collapse'}>
+        <button
+          className="sidebar-toggle"
+          onClick={onToggle}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
           {collapsed ? <FaChevronRight /> : <FaChevronLeft />}
         </button>
       </div>
 
-      {/* Nav */}
+      {/* Navigation */}
       <nav className="sidebar-nav">
-        {!collapsed && <div className="sidebar-section-label">Main Menu</div>}
+        {!collapsed && <div className="sidebar-section-label">Operations</div>}
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -68,9 +74,10 @@ const Sidebar = ({ collapsed, onToggle }) => {
             <span className="nav-item-label">{label}</span>
           </NavLink>
         ))}
+
         {user?.role === 'admin' && (
           <>
-            {!collapsed && <div className="sidebar-section-label" style={{ marginTop: 12 }}>System</div>}
+            {!collapsed && <div className="sidebar-section-label" style={{ marginTop: 16 }}>Configuration</div>}
             <NavLink
               to="/settings"
               data-tooltip="Settings"
@@ -83,14 +90,14 @@ const Sidebar = ({ collapsed, onToggle }) => {
         )}
       </nav>
 
-      {/* Footer */}
+      {/* Footer User Info */}
       <div className="sidebar-footer">
         <div className="sidebar-user">
-          <div className="avatar" style={{ width: 32, height: 32, fontSize: 12 }}>{initials}</div>
+          <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>{initials}</div>
           {!collapsed && (
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user?.name || 'User'}</div>
-              <div className="sidebar-user-role" style={{ textTransform: 'capitalize' }}>{user?.role}</div>
+              <div className="sidebar-user-role">{user?.role}</div>
             </div>
           )}
         </div>
