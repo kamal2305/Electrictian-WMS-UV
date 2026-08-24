@@ -114,11 +114,17 @@ api.interceptors.response.use(
       // Don't try other ports for authentication errors - it's not a connection issue
       return Promise.reject(error);
     }
-      // If the error is due to server connection issues (network error)
+    // If the error is due to server connection issues (network error)
     if (error.message === 'Network Error' || !error.response) {
       console.warn(`Network error connecting to ${error.config?.url || 'API'}`);
       
-      // Try to find an active port
+      // In production (REACT_APP_API_URL is configured), do not scan localhost ports
+      if (process.env.REACT_APP_API_URL || process.env.NODE_ENV === 'production') {
+        console.error('Backend server may be waking up (Render free tier cold start) or unreachable.');
+        return Promise.reject(error);
+      }
+
+      // In local development, try to find an active port
       const findActivePort = async () => {
         for (const port of API_PORTS) {
           if (port === getPort()) continue; // Skip the current port that just failed
