@@ -17,20 +17,24 @@ exports.getAnalytics = async (req, res) => {
       TimeLog.find({ status: 'completed' }),
       Material.find()
     ]);
+
     const totalRevenue = invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
     const totalHours = timelogs.reduce((sum, t) => sum + (t.hoursWorked || 0), 0);
     const totalMaterialCost = materials.reduce((sum, m) => sum + ((m.quantity || 0) * (m.unitPrice || 0)), 0);
+
     const jobsByMonth = await Job.aggregate([
       { $group: { _id: { month: { $month: '$createdAt' }, year: { $year: '$createdAt' } }, count: { $sum: 1 } } },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
       { $limit: 12 }
     ]);
+
     const revenueByMonth = await Invoice.aggregate([
       { $match: { status: 'Paid' } },
       { $group: { _id: { month: { $month: '$createdAt' }, year: { $year: '$createdAt' } }, total: { $sum: '$totalAmount' } } },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
       { $limit: 12 }
     ]);
+
     res.status(200).json({
       success: true,
       data: {
@@ -46,7 +50,6 @@ exports.getAnalytics = async (req, res) => {
         },
         revenueStats: {
           totalRevenue,
-          monthlyGrowth: 12.5,
           monthlyData: revenueByMonth.map(r => ({
             month: `M${r._id.month}/${r._id.year}`,
             revenue: r.total
@@ -74,30 +77,126 @@ exports.getAnalytics = async (req, res) => {
         jobsByMonth, revenueByMonth
       }
     });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 exports.getDashboardStats = async (req, res) => {
   try {
-    const [totalJobs, pendingJobs, inProgressJobs, completedJobs, totalElectricians, invoices, totalMaterials, recentJobs, electricians] = await Promise.all([
+    const [
+      totalJobs,
+      pendingJobs,
+      inProgressJobs,
+      completedJobs,
+      totalElectricians,
+      invoices,
+      materials,
+      recentJobs,
+      recentTimeLogs,
+      recentInvoices,
+      electricians
+    ] = await Promise.all([
       Job.countDocuments(),
       Job.countDocuments({ status: { $in: ['Pending', 'Not Started'] } }),
       Job.countDocuments({ status: 'In Progress' }),
       Job.countDocuments({ status: 'Completed' }),
       User.countDocuments({ role: 'electrician' }),
       Invoice.find(),
-      Material.countDocuments(),
-      Job.find().populate('assignedTo', 'name email').sort('-createdAt').limit(8),
-      User.find({ role: 'electrician' }).select('name email')
+      Material.find(),
+      Job.find().populate('assignedTo', 'name email phone').populate('client', 'name phone').sort('-createdAt').limit(6),
+      TimeLog.find().populate('electrician', 'name email').populate('job', 'title').sort('-createdAt').limit(6),
+      Invoice.find().populate('customer', 'name').sort('-createdAt').limit(6),
+      User.find({ role: 'electrician' }).select('name email phone specialization')
     ]);
 
     const totalRevenue = invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+    const pendingRevenue = invoices.filter(i => i.status !== 'Paid').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
     const pendingInvoices = invoices.filter(i => i.status !== 'Paid').length;
+    const lowStockMaterials = materials.filter(m => (m.quantity || 0) <= (m.minStock || 5));
 
-    const electricianPerformance = electricians.map(e => ({
-      name: e.name || 'Technician',
-      completedJobs: Math.floor(Math.random() * 5) + 1
-    }));
+    // Calculate real live completed jobs and active jobs for each electrician from MongoDB
+    const electricianPerformance = await Promise.all(
+      electricians.map(async e => {
+        const [completedCount, activeCount] = await Promise.all([
+          Job.countDocuments({
+            $or: [{ assignedTo: e._id }, { assignedElectricians: e._id }],
+            status: 'Completed'
+          }),
+          Job.countDocuments({
+            $or: [{ assignedTo: e._id }, { assignedElectricians: e._id }],
+            status: 'In Progress'
+          })
+        ]);
+        return {
+          id: e._id,
+          name: e.name || 'Technician',
+          email: e.email,
+          specialization: e.specialization || 'Electrician',
+          completedJobs: completedCount,
+          activeJobs: activeCount
+        };
+      })
+    );
+
+    // Aggregate real weekly jobs velocity for the SVG chart
+    const now = new Date();
+    const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
+    const weeklyJobsAggregate = await Job.aggregate([
+      { $match: { createdAt: { $gte: fourWeeksAgo } } },
+      {
+        $group: {
+          _id: { $week: '$createdAt' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    // Build real live activity stream from real database records
+    const liveActivities = [];
+
+    recentJobs.forEach(job => {
+      liveActivities.push({
+        id: `job-${job._id}`,
+        type: 'job',
+        icon: 'assignment',
+        color: 'var(--primary)',
+        title: `Work Order: ${job.title || 'Electrical Service Ticket'}`,
+        subtitle: `Assigned: ${job.assignedTo?.name || 'Unassigned'} • Status: ${job.status || 'Pending'}`,
+        timestamp: job.createdAt,
+        link: `/jobs/${job._id}`
+      });
+    });
+
+    recentInvoices.forEach(inv => {
+      liveActivities.push({
+        id: `inv-${inv._id}`,
+        type: 'invoice',
+        icon: 'payments',
+        color: 'var(--teal)',
+        title: `Invoice #${inv.invoiceNumber || inv._id.toString().slice(-5).toUpperCase()} (${inv.status || 'Draft'})`,
+        subtitle: `Customer: ${inv.customer?.name || inv.client?.name || 'Direct Client'} • Total: ₹${(inv.totalAmount || 0).toLocaleString('en-IN')}`,
+        timestamp: inv.createdAt,
+        link: `/invoices/${inv._id}`
+      });
+    });
+
+    recentTimeLogs.forEach(tl => {
+      liveActivities.push({
+        id: `tl-${tl._id}`,
+        type: 'timelog',
+        icon: 'schedule',
+        color: 'var(--accent)',
+        title: `${tl.electrician?.name || 'Technician'} logged ${tl.hoursWorked || 0} hrs`,
+        subtitle: `Job: ${tl.job?.title || 'Field Work'} • Status: ${tl.status || 'Completed'}`,
+        timestamp: tl.createdAt,
+        link: '/reports/attendance'
+      });
+    });
+
+    // Sort live activities descending by creation date
+    liveActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     res.status(200).json({
       success: true,
@@ -107,14 +206,28 @@ exports.getDashboardStats = async (req, res) => {
         pendingJobs,
         completedJobs,
         totalElectricians,
-        totalMaterials,
+        totalMaterials: materials.length,
+        lowStockCount: lowStockMaterials.length,
+        lowStockItems: lowStockMaterials.slice(0, 5).map(m => ({
+          id: m._id,
+          name: m.name,
+          sku: m.sku,
+          quantity: m.quantity || 0,
+          minStock: m.minStock || 5,
+          unit: m.unit || 'pcs'
+        })),
         totalRevenue,
+        pendingRevenue,
         pendingInvoices,
         recentJobs,
-        electricianPerformance
+        electricianPerformance,
+        weeklyVelocity: weeklyJobsAggregate.map(w => w.count),
+        liveActivities: liveActivities.slice(0, 8)
       }
     });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 exports.getElectricianDashboardStats = async (req, res) => {

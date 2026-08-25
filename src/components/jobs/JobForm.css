@@ -1,121 +1,101 @@
+/* ==========================================================================
+   JOB FORM — Technical Editorial Dual-Theme Styles
+   ========================================================================== */
+
 .job-form-container {
   max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: var(--bg-white);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px var(--shadow-color);
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 36px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
 }
 
 .job-form-container h2 {
-  margin-bottom: 2rem;
-  color: var(--text-dark);
+  font-family: 'EB Garamond', serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  text-align: left;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
 }
 
 .job-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
   display: grid;
-  gap: 1.5rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .form-group label {
-  font-weight: 500;
-  color: var(--text-dark);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
-  padding: 0.75rem;
-  border: 1px solid var(--input-border);
-  border-radius: 4px;
-  font-size: 1rem;
-  background-color: var(--input-bg);
-  color: var(--text-dark);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition-fast);
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
-  border-color: var(--input-focus);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(5, 125, 205, 0.1);
+  border-color: var(--border-focus);
+  background: var(--bg-input-focus);
 }
 
 .form-group textarea {
-  min-height: 120px;
+  min-height: 100px;
   resize: vertical;
 }
 
 .form-group select[multiple] {
-  min-height: 150px;
+  min-height: 120px;
 }
 
 .form-group small {
-  color: var(--text-medium);
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .form-actions {
   display: flex;
-  gap: 1rem;
+  gap: 12px;
   justify-content: flex-end;
-  margin-top: 1rem;
-}
-
-.btn-primary {
-  background-color: var(--btn-primary);
-  color: var(--btn-text);
-  border: none;
-  border-radius: 6px;
-  padding: 0.75rem 1.5rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(5, 125, 205, 0.2);
-}
-
-.btn-primary:hover {
-  background-color: var(--btn-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(5, 125, 205, 0.3);
-}
-
-.btn-secondary {
-  background-color: var(--btn-secondary);
-  color: var(--text-dark);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 0.75rem 1.5rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background-color: var(--btn-secondary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 2px 6px rgba(5, 125, 205, 0.15);
-}
-
-.error-message {
-  background: #fff5f5;
-  color: #f44336;
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-  border-left: 4px solid #f44336;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-medium);
+  margin-top: 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
 }

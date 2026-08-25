@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../config/axios';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
+import { FaFileDownload, FaPrint, FaCalendarAlt, FaUserTie } from 'react-icons/fa';
 import './AttendanceReport.css';
 
 const AttendanceReport = () => {
@@ -14,6 +15,7 @@ const AttendanceReport = () => {
   const [electricians, setElectricians] = useState([]);
   const [selectedElectrician, setSelectedElectrician] = useState('all');
   const [detailedView, setDetailedView] = useState(false);
+
   // Calculate current week value for the input
   function getWeekValue() {
     const now = new Date();
@@ -64,29 +66,24 @@ const AttendanceReport = () => {
 
   // Convert week format (YYYY-Www) to a date for the API
   function formatWeekToDate(weekStr) {
-    const [year, week] = weekStr.split('-W');
+    const [year, weekNum] = weekStr.split('-W');
     const firstDayOfYear = new Date(parseInt(year), 0, 1);
-    const days = 1 + (parseInt(week) - 1) * 7;
-    const date = new Date(firstDayOfYear.setDate(days));
-    return date.toISOString().split('T')[0];
+    const days = 1 + (parseInt(weekNum) - 1) * 7;
+    const resDate = new Date(firstDayOfYear.setDate(days));
+    return resDate.toISOString().split('T')[0];
   }
 
   // Export to CSV
   const exportToCSV = () => {
     if (!reportData) return;
     
-    // Prepare CSV content
     let csvContent = 'data:text/csv;charset=utf-8,';
-    
-    // Headers
     csvContent += 'Electrician Name,Email,Total Hours,Log Count\n';
     
-    // Add electrician data
     reportData.electricians.forEach(electrician => {
       csvContent += `${electrician.name},${electrician.email},${electrician.totalHours},${electrician.logCount}\n`;
     });
     
-    // Encode and trigger download
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -98,44 +95,48 @@ const AttendanceReport = () => {
     toast.success('Report exported to CSV');
   };
 
-  // Only admins can access reports
   if (user?.role !== 'admin') {
-    return <div className="unauthorized-message">Only administrators can access reports.</div>;
+    return (
+      <div className="page-container">
+        <div className="unauthorized-message">Only administrators can access attendance reports.</div>
+      </div>
+    );
   }
+
   return (
-    <div className="attendance-report-container">
-      <h2>Daily Attendance Reports</h2>
-      <p className="report-description">
-        Track employee attendance, work hours, and productivity with detailed reports
-      </p>
+    <div className="page-container attendance-report-page">
+      <div className="page-header">
+        <div>
+          <h1>Daily Attendance Reports</h1>
+          <div className="page-title-sub">Track employee attendance, work hours, and productivity telemetry</div>
+        </div>
+      </div>
       
-      <form onSubmit={generateReport} className="report-form">
-        <div className="form-row">
-          <div className="form-group">
-            <label>Report Type</label>
+      <form onSubmit={generateReport} className="report-form-card">
+        <div className="report-form-grid">
+          {/* Col 1: Report Type */}
+          <div className="report-form-group">
+            <label>Report Frequency</label>
             <div className="report-type-selector">
-              <label className={`report-type-option ${reportType === 'daily' ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  value="daily"
-                  checked={reportType === 'daily'}
-                  onChange={() => setReportType('daily')}
-                />
-                Daily Report
-              </label>
-              <label className={`report-type-option ${reportType === 'weekly' ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  value="weekly"
-                  checked={reportType === 'weekly'}
-                  onChange={() => setReportType('weekly')}
-                />
-                Weekly Report
-              </label>
+              <button
+                type="button"
+                className={`report-type-btn ${reportType === 'daily' ? 'selected' : ''}`}
+                onClick={() => setReportType('daily')}
+              >
+                <FaCalendarAlt /> Daily Report
+              </button>
+              <button
+                type="button"
+                className={`report-type-btn ${reportType === 'weekly' ? 'selected' : ''}`}
+                onClick={() => setReportType('weekly')}
+              >
+                <FaCalendarAlt /> Weekly Report
+              </button>
             </div>
           </div>
           
-          <div className="form-group">
+          {/* Col 2: Electrician Selector */}
+          <div className="report-form-group">
             <label htmlFor="electrician">Electrician</label>
             <select
               id="electrician"
@@ -150,47 +151,45 @@ const AttendanceReport = () => {
               ))}
             </select>
           </div>
-        </div>
-        
-        <div className="form-row">
-          {reportType === 'daily' ? (
-            <div className="form-group">
-              <label htmlFor="date">Select Date</label>
+
+          {/* Col 3: Date/Week Picker */}
+          <div className="report-form-group">
+            <label htmlFor="report-date">
+              {reportType === 'daily' ? 'Select Date' : 'Select Week'}
+            </label>
+            {reportType === 'daily' ? (
               <input
                 type="date"
-                id="date"
+                id="report-date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 max={new Date().toISOString().split('T')[0]}
               />
-            </div>
-          ) : (
-            <div className="form-group">
-              <label htmlFor="week">Select Week</label>
+            ) : (
               <input
                 type="week"
-                id="week"
+                id="report-date"
                 value={week}
                 onChange={(e) => setWeek(e.target.value)}
                 max={getWeekValue()}
               />
-            </div>
-          )}
+            )}
+          </div>
           
-          <div className="form-group checkbox-group">
-            <label className="checkbox-container">
+          {/* Col 4: Checkbox option */}
+          <div className="report-form-group" style={{ justifyContent: 'center' }}>
+            <label className="report-checkbox-row">
               <input
                 type="checkbox"
                 checked={detailedView}
                 onChange={() => setDetailedView(!detailedView)}
               />
-              <span className="checkmark"></span>
-              Show Detailed Logs
+              <span className="report-checkbox-label">Include Detailed Session Logs</span>
             </label>
           </div>
         </div>
         
-        <div className="form-actions">
+        <div className="report-actions">
           <button 
             type="submit" 
             className="btn btn-primary" 
@@ -200,127 +199,92 @@ const AttendanceReport = () => {
           </button>
         </div>
       </form>
-        {reportData && (
-        <div className="report-results">
-          <div className="report-header">
-            <h3>{reportData.title}</h3>
-            <p>Generated: {new Date(reportData.generatedAt).toLocaleString()}</p>
-            <div className="report-actions">
+      
+      {reportData && (
+        <div className="report-results-card">
+          <div className="report-results-header">
+            <div>
+              <h3>{reportData.title}</h3>
+              <p>Generated: {new Date(reportData.generatedAt).toLocaleString()}</p>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
               <button 
-                className="btn btn-secondary"
+                className="btn btn-secondary btn-sm"
                 onClick={exportToCSV}
               >
-                <i className="fa fa-download"></i> Export to CSV
+                <FaFileDownload /> Export CSV
               </button>
               <button 
-                className="btn btn-secondary"
+                className="btn btn-secondary btn-sm"
                 onClick={() => window.print()}
               >
-                <i className="fa fa-print"></i> Print Report
+                <FaPrint /> Print
               </button>
             </div>
           </div>
           
-          <div className="report-summary">
-            <div className="summary-card">
+          <div className="report-summary-grid">
+            <div className="report-summary-tile">
               <h4>Total Electricians</h4>
-              <p className="summary-number">{reportData.electriciansCount}</p>
+              <div className="report-summary-value">{reportData.electriciansCount}</div>
             </div>
-            <div className="summary-card">
-              <h4>Total Time Logs</h4>
-              <p className="summary-number">{reportData.timeLogsCount}</p>
+            <div className="report-summary-tile">
+              <h4>Total Logs</h4>
+              <div className="report-summary-value">{reportData.timeLogsCount}</div>
             </div>
-            <div className="summary-card">
+            <div className="report-summary-tile">
               <h4>Total Hours</h4>
-              <p className="summary-number">{reportData.totalHours}</p>
-              <p className="summary-label">Hours Worked</p>
+              <div className="report-summary-value">{reportData.totalHours}</div>
+              <span className="report-summary-sub">Hours Worked</span>
             </div>
-            <div className="summary-card">
-              <h4>Avg. Per Person</h4>
-              <p className="summary-number">
+            <div className="report-summary-tile">
+              <h4>Avg. / Person</h4>
+              <div className="report-summary-value">
                 {reportData.electriciansCount > 0 
                   ? (reportData.totalHours / reportData.electriciansCount).toFixed(1) 
                   : '0'}
-              </p>
-              <p className="summary-label">Hours/Person</p>
+              </div>
+              <span className="report-summary-sub">Hours / Person</span>
             </div>
           </div>
           
-          <div className="report-table-container">
-            <h4>Electrician Attendance Summary</h4>
-            <table className="report-table">
+          <div className="table-container" style={{ marginTop: 24 }}>
+            <table>
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Electrician</th>
                   <th>Email</th>
-                  <th>Total Hours</th>
-                  <th>Log Count</th>
-                  <th>Avg. Hours/Day</th>
-                  <th>Status</th>
+                  <th>Hours Logged</th>
+                  <th>Sessions</th>
+                  <th>Avg / Session</th>
                 </tr>
               </thead>
               <tbody>
-                {reportData.electricians.map((electrician, index) => (
-                  <tr key={index}>
-                    <td>{electrician.name}</td>
-                    <td>{electrician.email}</td>
-                    <td>{electrician.totalHours}</td>
-                    <td>{electrician.logCount}</td>
-                    <td>
-                      {electrician.logCount > 0 
-                        ? (electrician.totalHours / electrician.logCount).toFixed(1)
-                        : '0'}
+                {reportData.electricians.map(elec => (
+                  <tr key={elec.id || elec.email}>
+                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <FaUserTie style={{ color: 'var(--primary)' }} />
+                        {elec.name}
+                      </div>
                     </td>
+                    <td style={{ color: 'var(--text-muted)' }}>{elec.email}</td>
+                    <td style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                      {elec.totalHours} hrs
+                    </td>
+                    <td>{elec.logCount}</td>
                     <td>
-                      <span className={`status-badge ${
-                        electrician.totalHours >= 8 ? 'status-good' : 
-                        electrician.totalHours > 0 ? 'status-warning' : 'status-bad'
-                      }`}>
-                        {electrician.totalHours >= 8 ? 'Full Day' : 
-                         electrician.totalHours > 0 ? 'Partial' : 'Absent'}
-                      </span>
+                      {elec.logCount > 0 ? (elec.totalHours / elec.logCount).toFixed(1) : 0} hrs
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          
-          {detailedView && reportData.detailedLogs && (
-            <div className="detailed-logs-container">
-              <h4>Detailed Time Logs</h4>
-              <table className="report-table detailed-table">
-                <thead>
-                  <tr>
-                    <th>Electrician</th>
-                    <th>Job</th>
-                    <th>Check In</th>
-                    <th>Check Out</th>
-                    <th>Duration (hrs)</th>
-                    <th>Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reportData.detailedLogs.map((log, index) => (
-                    <tr key={index}>
-                      <td>{log.electricianName}</td>
-                      <td>{log.jobName || log.jobId}</td>
-                      <td>{new Date(log.checkInTime).toLocaleTimeString()}</td>
-                      <td>{log.checkOutTime 
-                        ? new Date(log.checkOutTime).toLocaleTimeString()
-                        : 'Active'}</td>
-                      <td>{(log.duration / 60).toFixed(2)}</td>
-                      <td>{log.notes || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       )}
     </div>
   );
 };
 
-export default AttendanceReport; 
+export default AttendanceReport;

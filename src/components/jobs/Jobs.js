@@ -111,7 +111,7 @@ const Jobs = () => {
                 padding: '6px 14px',
                 borderRadius: 'var(--radius-full)',
                 background: statusTab === tab.key ? 'var(--primary)' : 'var(--bg-card)',
-                color: statusTab === tab.key ? '#690000' : 'var(--text-muted)',
+                color: statusTab === tab.key ? 'var(--primary-text)' : 'var(--text-muted)',
                 border: '1px solid var(--border)',
                 cursor: 'pointer',
                 transition: 'var(--transition-fast)'

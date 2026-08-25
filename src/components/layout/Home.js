@@ -1,149 +1,242 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../common/ThemeToggle';
-import { FaBolt, FaUsers, FaClock, FaChartBar, FaFileInvoiceDollar, FaArrowRight, FaCheck } from 'react-icons/fa';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
+import './Home.css';
 
-const features = [
-  { icon: FaUsers, label: 'Role-Based Workforce Dispatch', desc: 'Admin, dispatcher, and electrician roles with fine-grained security and live dispatch.', color: '#6366f1', bg: 'rgba(99,102,241,0.15)' },
-  { icon: FaClock, label: 'Real-Time Shift & GPS Telemetry', desc: 'Check-in/out time tracking per job ticket with automated attendance reports.', color: '#06b6d4', bg: 'rgba(6,182,212,0.15)' },
-  { icon: FaChartBar, label: 'Operational BI Analytics', desc: 'Bento charts, revenue trends, and electrician performance leaderboards.', color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
-  { icon: FaFileInvoiceDollar, label: 'Itemized PDF Invoicing', desc: 'Enterprise invoices with PDF streaming, GST tax splits, and payment tracking.', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+const INDEX_SECTIONS = [
+  {
+    num: '01 — DISPATCH',
+    title: 'Role-Based Workforce Dispatch',
+    desc: 'Admin, dispatcher, and electrician roles with fine-grained security and live dispatch capabilities.'
+  },
+  {
+    num: '02 — TELEMETRY',
+    title: 'Real-Time Shift & GPS Telemetry',
+    desc: 'Check-in/out time tracking per job ticket combined with automated attendance reporting.'
+  },
+  {
+    num: '03 — ANALYTICS',
+    title: 'Operational BI Analytics',
+    desc: 'Bento charts, revenue trends, and electrician performance leaderboards built for executives.'
+  },
+  {
+    num: '04 — BILLING',
+    title: 'Itemized PDF Invoicing',
+    desc: 'Enterprise invoices with PDF streaming, GST tax splits, and integrated payment tracking.'
+  }
 ];
 
-const highlights = [
-  'Customer CRM & GSTIN',
-  'Dynamic Dual-Theme (Dark/Light)',
-  'Labour & Material SKU Tracking',
-  'Attendance & Shift Reports',
-  'Low-Stock Inventory Alerts',
-  'High-Density Bento Dashboards'
+const DATA_BLOCKS = [
+  {
+    icon: 'groups',
+    tag: 'CUSTOMER CRM',
+    metric: '360°',
+    desc: 'Complete client history and GSTIN management.'
+  },
+  {
+    icon: 'inventory_2',
+    tag: 'SKU TRACKING',
+    metric: 'Live',
+    desc: 'Labour & Material tracking with low-stock alerts.'
+  },
+  {
+    icon: 'assignment',
+    tag: 'SHIFT REPORTS',
+    metric: 'Auto',
+    desc: 'Automated attendance and operational shift reports.'
+  }
 ];
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useDocumentTitle(
+    'Enterprise Electrician Workforce Management',
+    'Modern workforce management platform for electrical contractors. Real-time dispatching, live inventory telemetry, automated PDF invoicing, and technician attendance tracking.'
+  );
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    const elements = document.querySelectorAll('.reveal-up');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className="home-container">
-      {/* Top Landing Navigation Bar */}
-      <nav style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '20px 36px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        background: 'var(--bg-header)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid var(--border)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            boxShadow: '0 4px 12px var(--primary-glow)'
-          }}>
-            <FaBolt />
-          </div>
-          <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            ElectroTrack <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700 }}>WMS</span>
-          </span>
+    <div className="home-page">
+      {/* ── Navigation Shell ── */}
+      <nav className="home-nav">
+        <Link to="/" className="home-nav-brand">
+          <span className="home-brand-title">ElectroTrack WMS</span>
+        </Link>
+
+        <div className={`home-nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+          <a href="#solutions" className="home-nav-link active" onClick={() => setMobileMenuOpen(false)}>Solutions</a>
+          <a href="#technology" className="home-nav-link" onClick={() => setMobileMenuOpen(false)}>Technology</a>
+          <a href="#data-proof" className="home-nav-link" onClick={() => setMobileMenuOpen(false)}>Company</a>
+          <a href="#solutions" className="home-nav-link" onClick={() => setMobileMenuOpen(false)}>Insights</a>
+          <a href="#footer" className="home-nav-link" onClick={() => setMobileMenuOpen(false)}>Contact</a>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="home-nav-actions">
           <ThemeToggle />
           {!isAuthenticated ? (
-            <div style={{ display: 'flex', gap: 10 }}>
-              <Link to="/login" className="btn btn-secondary btn-sm">
+            <>
+              <Link to="/login" className="btn btn-secondary btn-sm" style={{ display: 'inline-flex' }}>
                 Sign In
               </Link>
               <Link to="/register" className="btn btn-primary btn-sm">
                 Get Started
               </Link>
-            </div>
+            </>
           ) : (
             <Link to="/dashboard" className="btn btn-primary btn-sm">
-              Dashboard <FaArrowRight style={{ fontSize: 10 }} />
+              Console <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
             </Link>
           )}
+
+          <button
+            className="home-mobile-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Navigation"
+          >
+            <span className="material-symbols-outlined">
+              {mobileMenuOpen ? 'close' : 'menu'}
+            </span>
+          </button>
         </div>
       </nav>
 
-      {/* Hero */}
-      <div className="home-hero">
-        <div className="home-hero-badge">
-          <FaBolt /> Universal High-Tech Workforce System
-        </div>
-        <h1>
-          Master Your <span>Electrical</span> Operations
-        </h1>
-        <p>
-          Next-generation Workforce & Management System built for electrical contracting firms, field technicians, and rapid dispatch teams.
-        </p>
-        <div className="home-buttons">
-          {!isAuthenticated ? (
-            <>
-              <Link to="/register" className="btn btn-primary btn-lg">
-                Deploy Workforce Free <FaArrowRight style={{ fontSize: 12 }} />
-              </Link>
-              <Link to="/login" className="btn btn-secondary btn-lg">
-                Sign In to Console
-              </Link>
-            </>
-          ) : (
-            <Link to="/dashboard" className="btn btn-primary btn-lg">
-              Launch Operations Dashboard <FaArrowRight style={{ fontSize: 12 }} />
-            </Link>
-          )}
-        </div>
+      {/* ── Hero Section (Asymmetric 8/4 Grid) ── */}
+      <section className="home-hero-section">
+        <div className="home-hero-grid">
+          <div className="home-hero-content reveal-up">
+            <h1 className="font-display-xl home-hero-headline">
+              Master Your <br /> Electrical Operations
+            </h1>
+            <p className="font-body-lg home-hero-subtext">
+              Next-generation Workforce &amp; Management System built for electrical contracting firms, field technicians, and rapid dispatch teams.
+            </p>
+            <div className="home-hero-ctas">
+              {!isAuthenticated ? (
+                <>
+                  <Link to="/register" className="btn btn-primary btn-lg">
+                    Deploy Workforce Free
+                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                  </Link>
+                  <Link to="/login" className="btn btn-secondary btn-lg">
+                    Sign In to Console
+                  </Link>
+                </>
+              ) : (
+                <Link to="/dashboard" className="btn btn-primary btn-lg">
+                  Launch Operations Console
+                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
+                </Link>
+              )}
+            </div>
+          </div>
 
-        {/* Highlights */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginTop: 40, maxWidth: 900 }}>
-          {highlights.map(h => (
-            <span
-              key={h}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '6px 14px',
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                borderRadius: 20,
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--text-secondary)'
-              }}
-            >
-              <FaCheck style={{ color: 'var(--success)', fontSize: 10 }} /> {h}
-            </span>
-          ))}
-        </div>
-      </div>
+          <div className="home-hero-metrics reveal-up" style={{ transitionDelay: '150ms' }}>
+            <div className="home-metric-block">
+              <span className="font-label-caps home-metric-label">System Reliability</span>
+              <div className="font-data-metric home-metric-value">100%</div>
+              <span className="font-body-md home-metric-desc">Tracking uptime</span>
+            </div>
 
-      {/* Features Bento */}
-      <div className="home-features">
-        <h2>Enterprise-Grade Workforce Stack</h2>
-        <p>Every tool needed to dispatch, monitor, track materials, and bill with precision.</p>
-        <div className="features-grid">
-          {features.map(({ icon: Icon, label, desc, color, bg }) => (
-            <div className="feature-card glow-accent" key={label}>
-              <div className="feature-icon" style={{ background: bg, color }}>
-                <Icon />
+            <div className="home-metric-block">
+              <span className="font-label-caps home-metric-label">Live Dispatch</span>
+              <div className="font-data-metric home-metric-value">&lt; 1s</div>
+              <span className="font-body-md home-metric-desc">Update latency</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Problem / Solution Split Section ── */}
+      <section className="home-solution-section" id="solutions">
+        <div className="home-solution-grid">
+          <div className="home-solution-left reveal-up">
+            <h2 className="font-headline-lg">Enterprise-Grade Workforce Stack</h2>
+            <p className="font-body-lg">
+              Every tool needed to dispatch, monitor, track materials, and bill with precision, engineered into a single source of operational truth.
+            </p>
+          </div>
+
+          <div className="home-index-list reveal-up" style={{ transitionDelay: '100ms' }}>
+            {INDEX_SECTIONS.map((sec) => (
+              <div key={sec.num} className="home-index-row">
+                <div className="font-label-caps home-index-number">{sec.num}</div>
+                <div className="home-index-content">
+                  <div className="home-index-title-wrap">
+                    <h3 className="home-index-title">{sec.title}</h3>
+                    <span className="material-symbols-outlined home-index-arrow">arrow_forward</span>
+                  </div>
+                  <p className="font-body-md home-index-desc">{sec.desc}</p>
+                </div>
               </div>
-              <h3>{label}</h3>
-              <p>{desc}</p>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Data-as-Brand Full-Width Section ── */}
+      <section className="home-databrand-section" id="data-proof">
+        <div className="home-databrand-inner reveal-up">
+          {DATA_BLOCKS.map((item) => (
+            <div key={item.tag} className="home-databrand-card">
+              <span className="material-symbols-outlined home-databrand-icon">{item.icon}</span>
+              <span className="font-label-caps home-databrand-tag">{item.tag}</span>
+              <div className="font-display-lg home-databrand-metric">{item.metric}</div>
+              <p className="font-body-md home-databrand-desc">{item.desc}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
+
+      {/* ── Abstract Interface Feature Showcase Banner ── */}
+      <section className="home-showcase-section" id="technology">
+        <div className="home-showcase-banner reveal-up">
+          <div className="home-showcase-backdrop" />
+          <div className="home-showcase-grid-overlay" />
+          <div className="home-showcase-text">Precision.</div>
+        </div>
+      </section>
+
+      {/* ── Editorial Footer Shell ── */}
+      <footer className="home-footer" id="footer">
+        <div className="home-footer-inner">
+          <div className="home-footer-brand">
+            <div className="home-footer-title">ElectroTrack WMS</div>
+            <div className="font-label-caps home-footer-copy">
+              &copy; {new Date().getFullYear()} ElectroTrack WMS. All rights reserved. Industrial Grade Precision.
+            </div>
+          </div>
+
+          <div className="home-footer-links">
+            <a href="#privacy" className="font-label-caps home-footer-link">Privacy Policy</a>
+            <a href="#terms" className="font-label-caps home-footer-link">Terms of Service</a>
+            <a href="#security" className="font-label-caps home-footer-link">Security</a>
+            <a href="#status" className="font-label-caps home-footer-link">Status</a>
+            <a href="#api" className="font-label-caps home-footer-link">API Docs</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   App.css — High-Tech Glassmorphic Shell & Bento Component Styles
+   App.css — Technical Editorial Shell & Bento Layout Styles
    ========================================================================== */
 
 .App {
@@ -7,23 +7,23 @@
   min-height: 100vh;
   background-color: var(--bg);
   color: var(--text);
+  position: relative;
 }
 
-/* === SIDEBAR === */
+/* === SIDEBAR (Technical Editorial Command Drawer) === */
 .sidebar {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   width: var(--sidebar-width);
-  background: var(--sidebar-bg);    /* #130d0b — Stitch surface-container-lowest */
-  border-right: 1px solid rgba(94, 63, 58, 0.3);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  z-index: 50;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 60;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  box-shadow: 4px 0 24px rgba(19, 13, 11, 0.6);
 }
 
 .sidebar.collapsed {
@@ -34,11 +34,22 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 20px;
+  padding: 0 16px;
   height: 64px;
-  border-bottom: 1px solid rgba(94, 63, 58, 0.2);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   position: relative;
+  transition: var(--transition);
+}
+
+.sidebar.collapsed .sidebar-header {
+  padding: 0 10px;
+  justify-content: center;
+  gap: 0;
+}
+
+.sidebar.collapsed .sidebar-logo {
+  display: none;
 }
 
 .sidebar-logo {
@@ -47,7 +58,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
   color: var(--primary);
   flex-shrink: 0;
 }
@@ -55,49 +66,66 @@
 .sidebar-brand {
   overflow: hidden;
   white-space: nowrap;
+  flex: 1;
 }
 
 .sidebar-brand-name {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--primary);     /* coral — matches Stitch ElectroTrack heading */
+  font-family: 'EB Garamond', serif;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   line-height: 1;
 }
 
 .sidebar-brand-sub {
   font-size: 9px;
-  font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--accent);      /* lime — ENTERPRISE WMS */
-  text-transform: uppercase;
+  color: var(--accent);
 }
 
+/* Sidebar Toggle inside Sidebar */
 .sidebar-toggle {
-  position: absolute;
-  right: -11px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 22px;
-  height: 22px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 50%;
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  background: var(--bg-glass-btn);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   color: var(--text-muted);
   font-size: 11px;
-  z-index: 10;
-  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+  margin-left: 0;
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
 }
 
 .sidebar-toggle:hover {
   background: var(--primary);
-  color: #690000;
+  color: var(--primary-text);
   border-color: var(--primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.sidebar-mobile-close {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  margin-left: auto;
+  cursor: pointer;
 }
 
 .sidebar-nav {
@@ -109,10 +137,7 @@
 
 .sidebar-section-label {
   font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
+  color: var(--text-muted);
   padding: 12px 12px 6px;
   white-space: nowrap;
   overflow: hidden;
@@ -124,14 +149,14 @@
   padding: 0;
 }
 
-/* Stitch pill-style nav items */
 .nav-item-sidebar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 10px 16px;
-  border-radius: var(--radius);
-  color: var(--text-secondary);     /* on-surface-variant */
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: 'Hanken Grotesk', sans-serif;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -139,30 +164,32 @@
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   position: relative;
 }
 
 .nav-item-sidebar:hover {
-  background: rgba(94, 63, 58, 0.35); /* surface-variant */
-  color: var(--text);
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
 }
 
-/* Active: Stitch primary-container pill */
 .nav-item-sidebar.active {
-  background: var(--primary-active);  /* #e0160e — crimson container */
-  color: #fff4f2;                     /* on-primary-container */
-  font-weight: 700;
-  box-shadow: 0 4px 16px rgba(224, 22, 14, 0.30);
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 600;
+  border: 1px solid var(--primary);
 }
 
-/* Remove old bar indicator — pill style replaces it */
-.nav-item-sidebar.active::before {
-  content: none;
+.nav-item-sidebar.active .nav-item-icon {
+  color: var(--accent);
+}
+
+.nav-item-sidebar.active .nav-item-label {
+  color: var(--primary-text);
 }
 
 .nav-item-icon {
-  font-size: 16px;
+  font-size: 15px;
   flex-shrink: 0;
   width: 20px;
   text-align: center;
@@ -171,7 +198,7 @@
 .nav-item-label {
   overflow: hidden;
   white-space: nowrap;
-  transition: opacity 0.2s, width 0.3s;
+  transition: opacity 0.2s, width 0.25s;
 }
 
 .sidebar.collapsed .nav-item-label {
@@ -184,44 +211,40 @@
   padding: 12px 0;
 }
 
-.sidebar.collapsed .nav-item-sidebar.active::before {
-  content: none;
-}
-
 /* Tooltip when collapsed */
 .sidebar.collapsed .nav-item-sidebar:hover::after {
   content: attr(data-tooltip);
   position: absolute;
-  left: calc(100% + 14px);
+  left: calc(100% + 12px);
   top: 50%;
   transform: translateY(-50%);
   background: var(--bg-elevated);
   color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-xs);
-  padding: 6px 12px;
-  font-size: 12px;
+  padding: 4px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
   pointer-events: none;
   z-index: 100;
-  box-shadow: var(--shadow);
 }
 
 .sidebar-footer {
-  padding: 14px 12px;
-  border-top: 1px solid rgba(94, 63, 58, 0.2);
+  padding: 12px;
+  border-top: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .sidebar-user {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .sidebar-user-info {
@@ -230,7 +253,7 @@
 
 .sidebar-user-name {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -240,27 +263,25 @@
 .sidebar-user-role {
   font-size: 10px;
   color: var(--text-muted);
-  text-transform: capitalize;
-  letter-spacing: 0.04em;
-  font-weight: 700;
-  text-transform: uppercase;
 }
 
 .sidebar-logout {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: var(--transition-fast);
   background: none;
   border: none;
   width: 100%;
-  font-family: inherit;
   white-space: nowrap;
   overflow: hidden;
 }
@@ -270,30 +291,27 @@
   color: var(--danger);
 }
 
-/* SYSTEM ONLINE live beacon row */
+/* SYSTEM ONLINE Live Telemetry Row */
 .sidebar-system-status {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 22px;
-  border-top: 1px solid rgba(94, 63, 58, 0.2);
+  padding: 8px 20px;
+  border-top: 1px solid var(--border);
 }
 
 .sidebar-system-label {
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--accent);   /* lime — matches Stitch secondary */
-  text-transform: uppercase;
+  color: var(--accent);
   white-space: nowrap;
 }
 
 .sidebar.collapsed .sidebar-user {
   justify-content: center;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 .sidebar.collapsed .sidebar-user-info { display: none; }
-.sidebar.collapsed .sidebar-logout { justify-content: center; padding: 12px 0; }
+.sidebar.collapsed .sidebar-logout { justify-content: center; padding: 10px 0; }
 .sidebar.collapsed .sidebar-logout span { display: none; }
 
 /* === MAIN CONTENT WRAPPER === */
@@ -301,10 +319,11 @@
   flex: 1;
   margin-left: var(--sidebar-width);
   min-height: 100vh;
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
   background-color: var(--bg);
+  min-width: 0;
 }
 
 .App.sidebar-collapsed .main-content {
@@ -313,158 +332,71 @@
 
 .main-content-inner {
   flex: 1;
-  padding: 28px 32px;
+  padding: clamp(16px, 2.5vw, 32px);
+  max-width: 1560px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-/* === BENTO DASHBOARD HERO & STAT CARDS === */
-.dashboard-container {
-  padding: 0;
+/* Mobile Sidebar Drawer */
+.mobile-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 55;
 }
 
-/* Stitch-style dashboard hero: warm surface-container */
-.dashboard-hero-banner {
-  background: linear-gradient(135deg, rgba(255, 180, 168, 0.10) 0%, rgba(190, 209, 52, 0.06) 100%);
-  border: 1px solid rgba(94, 63, 58, 0.5);
-  border-radius: var(--radius-lg);
-  padding: 28px 32px;
-  margin-bottom: 24px;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(12px);
-}
-
-.dashboard-hero-banner::before {
-  content: '';
-  position: absolute;
-  right: -50px;
-  top: -50px;
-  width: 220px;
-  height: 220px;
-  background: radial-gradient(circle, rgba(255, 180, 168, 0.20) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.dashboard-hero-title {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 6px;
-}
-
-.dashboard-hero-sub {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-/* Stat Cards */
-.stats-grid {
+/* === RESPONSIVE DASHBOARD GRIDS === */
+.admin-grid-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
 }
 
-.stat-card {
-  padding: 20px 24px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: var(--transition);
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 70px;
-  height: 70px;
-  border-radius: 0 var(--radius) 0 70px;
-  background: currentColor;
-  opacity: 0.05;
-}
-
-.stat-card:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-}
-
-.stat-card-label {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.stat-card-value {
-  font-size: 32px;
-  font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
-}
-
-.stat-icon {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
-
-/* === QUICK COMMAND ACTION PILLS === */
-.command-pill-grid {
+.admin-grid-main {
+  grid-column: span 8;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 24px;
 }
 
-.command-pill-item {
+.admin-grid-side {
+  grid-column: span 4;
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border);
-  color: var(--text);
-  text-decoration: none;
-  transition: var(--transition);
-  font-weight: 600;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.command-pill-item:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--primary);
-  transform: translateX(4px);
+@media (max-width: 1080px) {
+  .admin-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .admin-grid-main, .admin-grid-side {
+    grid-column: span 1 !important;
+  }
 }
 
-.command-pill-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-/* Responsive sidebar */
 @media (max-width: 900px) {
-  .sidebar { display: none; }
-  .main-content { margin-left: 0 !important; }
-  .App.sidebar-collapsed .main-content { margin-left: 0 !important; }
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px !important;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .sidebar-toggle {
+    display: none;
+  }
+  .sidebar-mobile-close {
+    display: block;
+  }
+  .main-content {
+    margin-left: 0 !important;
+  }
+  .App.sidebar-collapsed .main-content {
+    margin-left: 0 !important;
+  }
 }
+

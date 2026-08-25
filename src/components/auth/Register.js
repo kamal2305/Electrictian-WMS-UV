@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import { toast } from 'react-toastify';
 import {
   FaBolt,
@@ -36,6 +37,8 @@ const Register = () => {
 
   const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  useDocumentTitle('Create Account', 'Create your ElectroTrack WMS contractor or electrician technician account.');
 
   useEffect(() => { if (isAuthenticated) navigate('/dashboard'); }, [isAuthenticated, navigate]);
 
@@ -187,36 +190,37 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Role pills */}
+            {/* Role selection - Big Bento Cards */}
             <div className="auth-field">
               <label>Account Role</label>
-              <div className="auth-role-pills">
-                <label className="auth-role-pill">
-                  <input
-                    type="radio"
-                    name="role"
-                    value="admin"
-                    checked={formData.role === 'admin'}
-                    onChange={onChange}
-                  />
-                  <div className="auth-role-pill-label">
-                    <FaUserShield className="role-icon" />
-                    Admin
+              <div className="auth-role-grid">
+                <button
+                  type="button"
+                  className={`auth-role-btn ${formData.role === 'admin' ? 'selected' : ''}`}
+                  onClick={() => setFormData(prev => ({ ...prev, role: 'admin' }))}
+                >
+                  <div className="auth-role-icon">
+                    <FaUserShield />
                   </div>
-                </label>
-                <label className="auth-role-pill">
-                  <input
-                    type="radio"
-                    name="role"
-                    value="electrician"
-                    checked={formData.role === 'electrician'}
-                    onChange={onChange}
-                  />
-                  <div className="auth-role-pill-label">
-                    <FaHardHat className="role-icon" />
-                    Electrician
+                  <div className="auth-role-info">
+                    <span className="auth-role-name">Admin</span>
+                    <span className="auth-role-desc">Full Operations</span>
                   </div>
-                </label>
+                </button>
+
+                <button
+                  type="button"
+                  className={`auth-role-btn ${formData.role === 'electrician' ? 'selected' : ''}`}
+                  onClick={() => setFormData(prev => ({ ...prev, role: 'electrician' }))}
+                >
+                  <div className="auth-role-icon">
+                    <FaHardHat />
+                  </div>
+                  <div className="auth-role-info">
+                    <span className="auth-role-name">Electrician</span>
+                    <span className="auth-role-desc">Field Dispatch</span>
+                  </div>
+                </button>
               </div>
             </div>
 

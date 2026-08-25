@@ -1,10 +1,13 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import AdminDashboard from './AdminDashboard';
 import ElectricianDashboard from './ElectricianDashboard';
 
 const Dashboard = () => {
   const { user, loading, isAuthenticated } = useAuth();
+  
+  useDocumentTitle('Operations Dashboard', 'Real-time telemetry, active work orders, inventory levels, and live revenue tracking.');
   
   // Show loading state if authentication is still being determined
   if (loading) {

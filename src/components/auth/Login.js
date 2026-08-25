@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import { toast } from 'react-toastify';
 import {
   FaBolt,
@@ -50,6 +51,8 @@ const Login = () => {
   const { email, password } = formData;
   const { login, isAuthenticated, error } = useAuth();
   const navigate = useNavigate();
+
+  useDocumentTitle('Sign In', 'Sign in to access your ElectroTrack WMS operations dashboard.');
 
   useEffect(() => { if (isAuthenticated) navigate('/dashboard'); }, [isAuthenticated, navigate]);
   useEffect(() => { if (error) toast.error(error); }, [error]);

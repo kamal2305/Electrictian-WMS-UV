@@ -45,19 +45,19 @@ const CustomerList = () => {
   );
 
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div className="page-header">
         <div>
           <h1>Customer Management</h1>
           <div className="page-title-sub">Manage client contacts, billing addresses, and invoice history</div>
         </div>
         <Link to="/customers/create" className="btn btn-primary">
-          <FaPlus /> Add Customer
+          <FaPlus style={{ fontSize: 10 }} /> Add Customer
         </Link>
       </div>
 
-      <div className="filters-bar">
-        <div className="search-bar" style={{ flex: 1 }}>
+      <div className="filters-bar" style={{ margin: 0 }}>
+        <div className="search-bar">
           <FaSearch className="search-bar-icon" />
           <input
             type="text"
@@ -74,30 +74,47 @@ const CustomerList = () => {
           <span>Loading customers...</span>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="empty-state card">
+        <div className="empty-state">
           <div className="empty-state-icon"><FaUser /></div>
           <h3>No Customers Found</h3>
           <p>{searchTerm ? 'Try adjusting your search criteria' : 'Add your first customer to start tracking invoices and jobs'}</p>
           {!searchTerm && (
             <Link to="/customers/create" className="btn btn-primary" style={{ marginTop: 16 }}>
-              <FaPlus /> Add Customer
+              <FaPlus style={{ fontSize: 10 }} /> Add Customer
             </Link>
           )}
         </div>
       ) : (
         <div className="grid-3">
           {filtered.map(customer => (
-            <div key={customer._id} className="card customer-card" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div className="avatar" style={{ width: 42, height: 42, fontSize: 16 }}>
-                    {customer.name?.slice(0, 2)}
+            <div
+              key={customer._id}
+              className="card"
+              style={{
+                padding: 24,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16
+              }}
+            >
+              {/* Card Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                  <div className="avatar" style={{ width: 40, height: 40, fontSize: 14 }}>
+                    {customer.name?.slice(0, 2).toUpperCase()}
                   </div>
-                  <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 600 }}>{customer.name}</h3>
-                    {customer.company && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{customer.company}</div>}
+                  <div style={{ minWidth: 0 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {customer.name}
+                    </h3>
+                    {customer.company && (
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {customer.company}
+                      </div>
+                    )}
                   </div>
                 </div>
+
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <Link to={`/customers/${customer._id}/edit`} className="btn btn-secondary btn-sm" style={{ padding: '6px 10px' }} title="Edit">
                     <FaEdit />
@@ -108,34 +125,38 @@ const CustomerList = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, flex: 1 }}>
+              {/* Card Details */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--text-secondary)', flex: 1 }}>
                 {customer.phone && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <FaPhone style={{ color: 'var(--primary)', fontSize: 12 }} />
-                    <span style={{ color: 'var(--text)' }}>{customer.phone}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <FaPhone style={{ color: 'var(--primary)', fontSize: 12, flexShrink: 0 }} />
+                    <span className="font-data-mono" style={{ color: 'var(--text-primary)' }}>{customer.phone}</span>
                   </div>
                 )}
                 {customer.email && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <FaEnvelope style={{ color: 'var(--accent)', fontSize: 12 }} />
-                    <span>{customer.email}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <FaEnvelope style={{ color: 'var(--accent)', fontSize: 12, flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{customer.email}</span>
                   </div>
                 )}
                 {customer.address && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                    <FaMapMarkerAlt style={{ color: 'var(--warning)', fontSize: 12, marginTop: 3 }} />
-                    <span>{customer.address}</span>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <FaMapMarkerAlt style={{ color: 'var(--warning)', fontSize: 12, marginTop: 3, flexShrink: 0 }} />
+                    <span style={{ lineHeight: 1.4 }}>{customer.address}</span>
                   </div>
                 )}
                 {customer.gstin && (
-                  <div style={{ fontSize: 11, background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: 4, width: 'fit-content' }}>
-                    GSTIN: <span style={{ color: 'var(--text)', fontWeight: 600 }}>{customer.gstin}</span>
+                  <div style={{ marginTop: 4 }}>
+                    <span className="badge badge-muted">
+                      GSTIN: {customer.gstin}
+                    </span>
                   </div>
                 )}
               </div>
 
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Link to={`/customers/${customer._id}`} style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 500 }}>
+              {/* Card Footer */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Link to={`/customers/${customer._id}`} style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   View Full Profile →
                 </Link>
                 <Link to={`/invoices/create?customerId=${customer._id}`} className="btn btn-outline btn-sm">

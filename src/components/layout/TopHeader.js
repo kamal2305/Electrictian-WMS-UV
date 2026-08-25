@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import ThemeToggle from '../common/ThemeToggle';
-import { FaPlus, FaSearch } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaBars } from 'react-icons/fa';
 import './TopHeader.css';
 
 const formatRouteName = (pathname) => {
@@ -10,7 +10,7 @@ const formatRouteName = (pathname) => {
   return path.charAt(0).toUpperCase() + path.slice(1);
 };
 
-const TopHeader = () => {
+const TopHeader = ({ onToggleMobile }) => {
   const { user } = useAuth();
   const location = useLocation();
   const currentTitle = formatRouteName(location.pathname);
@@ -18,30 +18,41 @@ const TopHeader = () => {
 
   return (
     <header className="top-header">
-      {/* Left — search bar */}
+      {/* Left — Hamburger (mobile) + search bar + breadcrumbs */}
       <div className="top-header-left">
-        <div className="header-search-bar">
-          <FaSearch className="header-search-icon" />
-          <input
-            type="text"
-            className="header-search-input"
-            placeholder="Search jobs, electricians, materials..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-          />
-        </div>
+        {onToggleMobile && (
+          <button
+            className="header-mobile-toggle"
+            onClick={onToggleMobile}
+            aria-label="Open Sidebar Menu"
+          >
+            <FaBars />
+          </button>
+        )}
 
         <div className="header-breadcrumbs">
           <span className="crumb-app">ElectroTrack</span>
           <span className="crumb-separator">/</span>
           <span className="crumb-active">{currentTitle}</span>
         </div>
+
+        <div className="header-search-bar">
+          <FaSearch className="header-search-icon" />
+          <input
+            type="text"
+            className="header-search-input"
+            placeholder="Search jobs, electricians, inventory..."
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+          />
+        </div>
       </div>
 
+      {/* Right — Actions, Theme Toggle, Profile */}
       <div className="top-header-right">
         {user?.role === 'admin' && (
           <Link to="/jobs/create" className="btn btn-primary btn-sm header-quick-btn">
-            <FaPlus /> <span>New Job</span>
+            <FaPlus style={{ fontSize: 10 }} /> <span>New Job</span>
           </Link>
         )}
 
@@ -57,9 +68,9 @@ const TopHeader = () => {
           <Link to="/profile" className="header-user-badge">
             <div className="header-user-meta">
               <span className="header-user-name">{user.name}</span>
-              <span className="header-user-role">{user.role}</span>
+              <span className="font-label-caps header-user-role">{user.role}</span>
             </div>
-            <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>
+            <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>
               {user.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
             </div>
           </Link>

@@ -171,7 +171,7 @@ const MaterialsList = () => {
                 padding: '6px 14px',
                 borderRadius: 'var(--radius-full)',
                 background: filterCategory === cat ? 'var(--primary)' : 'var(--bg-card)',
-                color: filterCategory === cat ? '#690000' : 'var(--text-muted)',
+                color: filterCategory === cat ? 'var(--primary-text)' : 'var(--text-muted)',
                 border: '1px solid var(--border)',
                 cursor: 'pointer',
                 transition: 'var(--transition-fast)'

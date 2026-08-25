@@ -67,6 +67,8 @@ class ErrorBoundary extends React.Component {
 // App Layout with Sidebar and TopHeader
 const AppLayout = () => {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true');
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const toggle = () => {
     setCollapsed(prev => {
       const next = !prev;
@@ -74,11 +76,20 @@ const AppLayout = () => {
       return next;
     });
   };
+
   return (
-    <div className={`App ${collapsed ? 'sidebar-collapsed' : ''}`}>
-      <Sidebar collapsed={collapsed} onToggle={toggle} />
+    <div className={`App ${collapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'mobile-sidebar-open' : ''}`}>
+      {mobileOpen && (
+        <div className="mobile-sidebar-backdrop" onClick={() => setMobileOpen(false)} />
+      )}
+      <Sidebar
+        collapsed={collapsed}
+        onToggle={toggle}
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
+      />
       <div className="main-content">
-        <TopHeader />
+        <TopHeader onToggleMobile={() => setMobileOpen(prev => !prev)} />
         <main className="main-content-inner">
           <ErrorBoundary>
             <Suspense fallback={<Spinner />}>
@@ -87,7 +98,6 @@ const AppLayout = () => {
           </ErrorBoundary>
         </main>
       </div>
-      {/* ToastContainer is at App root — no duplicate needed here */}
     </div>
   );
 };

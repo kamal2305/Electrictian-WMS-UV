@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   FaTachometerAlt, FaBriefcase, FaUsers, FaAddressBook,
   FaBoxes, FaFileInvoiceDollar, FaChartLine, FaCalendarAlt,
-  FaCog, FaBolt, FaSignOutAlt, FaChevronLeft, FaChevronRight
+  FaCog, FaBolt, FaSignOutAlt, FaChevronLeft, FaChevronRight, FaTimes
 } from 'react-icons/fa';
 
 const adminNavItems = [
@@ -25,7 +25,7 @@ const electricianNavItems = [
   { to: '/invoices',  icon: FaFileInvoiceDollar, label: 'Invoices' },
 ];
 
-const Sidebar = ({ collapsed, onToggle }) => {
+const Sidebar = ({ collapsed, onToggle, mobileOpen, onCloseMobile }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -38,7 +38,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
   const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
       {/* Brand Header */}
       <div className="sidebar-header">
         <div className="sidebar-logo">
@@ -47,9 +47,11 @@ const Sidebar = ({ collapsed, onToggle }) => {
         {!collapsed && (
           <div className="sidebar-brand">
             <div className="sidebar-brand-name">ElectroTrack</div>
-            <div className="sidebar-brand-sub">Enterprise WMS</div>
+            <div className="font-label-caps sidebar-brand-sub">Enterprise WMS</div>
           </div>
         )}
+        
+        {/* Desktop Collapse Toggle */}
         <button
           className="sidebar-toggle"
           onClick={onToggle}
@@ -58,16 +60,28 @@ const Sidebar = ({ collapsed, onToggle }) => {
         >
           {collapsed ? <FaChevronRight /> : <FaChevronLeft />}
         </button>
+
+        {/* Mobile Close Button */}
+        {mobileOpen && (
+          <button
+            className="sidebar-mobile-close"
+            onClick={onCloseMobile}
+            aria-label="Close Sidebar"
+          >
+            <FaTimes />
+          </button>
+        )}
       </div>
 
-      {/* Navigation */}
+      {/* Navigation Links */}
       <nav className="sidebar-nav">
-        {!collapsed && <div className="sidebar-section-label">Operations</div>}
+        {!collapsed && <div className="font-label-caps sidebar-section-label">Operations</div>}
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             data-tooltip={label}
+            onClick={() => { if (mobileOpen && onCloseMobile) onCloseMobile(); }}
             className={({ isActive }) => `nav-item-sidebar ${isActive ? 'active' : ''}`}
           >
             <span className="nav-item-icon"><Icon /></span>
@@ -77,10 +91,11 @@ const Sidebar = ({ collapsed, onToggle }) => {
 
         {user?.role === 'admin' && (
           <>
-            {!collapsed && <div className="sidebar-section-label" style={{ marginTop: 16 }}>Configuration</div>}
+            {!collapsed && <div className="font-label-caps sidebar-section-label" style={{ marginTop: 16 }}>Configuration</div>}
             <NavLink
               to="/settings"
               data-tooltip="Settings"
+              onClick={() => { if (mobileOpen && onCloseMobile) onCloseMobile(); }}
               className={({ isActive }) => `nav-item-sidebar ${isActive ? 'active' : ''}`}
             >
               <span className="nav-item-icon"><FaCog /></span>
@@ -90,22 +105,22 @@ const Sidebar = ({ collapsed, onToggle }) => {
         )}
       </nav>
 
-      {/* SYSTEM ONLINE Beacon — Stitch footer indicator */}
+      {/* SYSTEM ONLINE Beacon */}
       {!collapsed && (
         <div className="sidebar-system-status">
           <span className="live-beacon"></span>
-          <span className="sidebar-system-label">SYSTEM ONLINE</span>
+          <span className="font-label-caps sidebar-system-label">SYSTEM ONLINE</span>
         </div>
       )}
 
       {/* Footer User Info */}
       <div className="sidebar-footer">
         <div className="sidebar-user">
-          <div className="avatar" style={{ width: 34, height: 34, fontSize: 12 }}>{initials}</div>
+          <div className="avatar" style={{ width: 32, height: 32, fontSize: 11 }}>{initials}</div>
           {!collapsed && (
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{user?.name || 'User'}</div>
-              <div className="sidebar-user-role">{user?.role}</div>
+              <div className="font-label-caps sidebar-user-role">{user?.role}</div>
             </div>
           )}
         </div>
