@@ -40,37 +40,37 @@
   --input-border: var(--border);
   --input-focus: var(--primary);
 
-  /* Chart Colors */
-  --chart-color-1: #6366f1;
-  --chart-color-2: #06b6d4;
-  --chart-color-3: #10b981;
-  --chart-color-4: #f59e0b;
-  --chart-color-5: #a855f7;
+  /* Chart Colors — Stitch palette */
+  --chart-color-1: #ffb4a8;   /* primary coral */
+  --chart-color-2: #bed134;   /* secondary lime */
+  --chart-color-3: #bfd04f;   /* tertiary yellow-green */
+  --chart-color-4: #ffb4ab;   /* error coral */
+  --chart-color-5: #e8bcb6;   /* on-surface-variant warm rose */
 }
 
 /* Status Badge mapping */
 .status-badge.pending {
   background-color: var(--warning-dim);
   color: var(--warning);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(190, 209, 52, 0.25);
 }
 
 .status-badge.in-progress {
   background-color: var(--info-dim);
   color: var(--info);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(232, 188, 182, 0.25);
 }
 
 .status-badge.completed {
   background-color: var(--success-dim);
   color: var(--success);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(191, 208, 79, 0.25);
 }
 
 .status-badge.cancelled {
   background-color: var(--danger-dim);
   color: var(--danger);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(255, 180, 171, 0.25);
 }
 
 .status-badge.overdue {

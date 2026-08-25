@@ -1,33 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import api from '../../config/axios';
 import { toast } from 'react-toastify';
-import {
-  FaBriefcase, FaUsers, FaBoxes, FaFileInvoiceDollar,
-  FaChartBar, FaPlus, FaArrowRight, FaCheckCircle,
-  FaClock, FaBolt
-} from 'react-icons/fa';
-import { Bar } from 'react-chartjs-2';
-import { Chart, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend, Filler } from 'chart.js';
 
-Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend, Filler);
-
-const statusBadge = (status) => {
-  const map = {
-    completed: 'badge-success',
-    'in-progress': 'badge-info',
-    pending: 'badge-warning',
-    cancelled: 'badge-danger',
-    overdue: 'badge-danger'
-  };
-  return `badge ${map[status] || 'badge-muted'}`;
-};
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
-  const { isDark } = useTheme();
   const navigate = useNavigate();
   const [data, setData] = useState({
     totalJobs: 0,
@@ -42,6 +19,7 @@ const AdminDashboard = () => {
     monthlyRevenue: []
   });
   const [loading, setLoading] = useState(true);
+  const [chartRange, setChartRange] = useState('30D');
 
   const fetchData = useCallback(async () => {
     try {
@@ -61,51 +39,6 @@ const AdminDashboard = () => {
     fetchData();
   }, [fetchData]);
 
-  const statCards = [
-    { label: 'Total Jobs', value: data.totalJobs, icon: FaBriefcase, color: '#6366f1', bg: 'rgba(99,102,241,0.15)', link: '/jobs', change: '+12% this mo' },
-    { label: 'Active Jobs', value: data.activeJobs, icon: FaClock, color: '#06b6d4', bg: 'rgba(6,182,212,0.15)', link: '/jobs', change: 'Live in field' },
-    { label: 'Electricians', value: data.totalElectricians, icon: FaUsers, color: '#10b981', bg: 'rgba(16,185,129,0.15)', link: '/electricians', change: 'Certified crew' },
-    { label: 'Materials SKU', value: data.totalMaterials, icon: FaBoxes, color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', link: '/materials', change: 'Inventory tracked' },
-    { label: 'Pending Invoices', value: data.pendingInvoices || 0, icon: FaFileInvoiceDollar, color: '#a855f7', bg: 'rgba(168,85,247,0.15)', link: '/invoices', change: 'Awaiting clearance' },
-    { label: 'Jobs Completed', value: data.completedJobs, icon: FaCheckCircle, color: '#10b981', bg: 'rgba(16,185,129,0.15)', link: '/jobs', change: '100% verified' },
-  ];
-
-  const quickActions = [
-    { label: 'Dispatch Job', sub: 'Assign crew to field ticket', icon: FaBriefcase, to: '/jobs/create', color: '#6366f1' },
-    { label: 'Onboard Electrician', sub: 'Register new technician', icon: FaUsers, to: '/electricians/create', color: '#06b6d4' },
-    { label: 'Generate Invoice', sub: 'Itemized billing & PDF export', icon: FaFileInvoiceDollar, to: '/invoices/create', color: '#10b981' },
-    { label: 'New Client CRM', sub: 'Add customer & GST details', icon: FaUsers, to: '/customers/create', color: '#f59e0b' },
-    { label: 'Analytics Hub', sub: 'Financial & performance trends', icon: FaChartBar, to: '/analytics', color: '#a855f7' },
-  ];
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: isDark ? '#0f121d' : '#ffffff',
-        titleColor: isDark ? '#f8fafc' : '#0f172a',
-        bodyColor: isDark ? '#94a3b8' : '#64748b',
-        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-        borderWidth: 1,
-        padding: 12,
-        boxPadding: 6,
-        usePointStyle: true
-      }
-    },
-    scales: {
-      x: {
-        grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' },
-        ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Inter', size: 11 } }
-      },
-      y: {
-        grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' },
-        ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { family: 'Inter', size: 11 } }
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div className="loading-container">
@@ -115,236 +48,568 @@ const AdminDashboard = () => {
     );
   }
 
+  // Format currency in INR / standard format
+  const formattedRevenue = `₹${(data.totalRevenue || 0).toLocaleString('en-IN')}`;
+
   return (
-    <div className="dashboard-container">
-      {/* High-Tech Hero Operations Banner */}
-      <div className="dashboard-hero-banner glow-accent">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '4px 10px', background: 'var(--primary-dim)', borderRadius: 20, border: '1px solid rgba(99,102,241,0.3)', fontSize: 11, fontWeight: 700, color: 'var(--primary-hover)' }}>
-              <FaBolt /> OPERATIONS CONTROL CENTER
-            </div>
-            <h1 className="dashboard-hero-title">
-              Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {user?.name?.split(' ')[0]}
-            </h1>
-            <p className="dashboard-hero-sub">
-              Workforce status: <span style={{ color: 'var(--success)', fontWeight: 600 }}>Active</span> · {data.activeJobs} Jobs in progress across field technicians.
-            </p>
+    <div className="dashboard-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* 1. Top Metrics Row (Stitch 4-Card Grid) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: 20
+      }}>
+        {/* Metric 1: Active Work Orders */}
+        <div
+          className="card"
+          style={{
+            padding: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            position: 'relative',
+            overflow: 'hidden',
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate('/jobs')}
+        >
+          <div style={{
+            position: 'absolute',
+            right: -16,
+            top: -16,
+            width: 96,
+            height: 96,
+            background: 'rgba(255, 180, 168, 0.08)',
+            borderRadius: '50%',
+            filter: 'blur(20px)'
+          }}></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
+            <span className="font-label-caps" style={{ color: 'var(--text-muted)' }}>ACTIVE WORK ORDERS</span>
+            <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: 22 }}>assignment</span>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <Link to="/jobs/create" className="btn btn-primary">
-              <FaPlus /> <span>New Job Dispatch</span>
-            </Link>
-            <Link to="/analytics" className="btn btn-secondary">
-              <FaChartBar /> <span>BI Analytics</span>
-            </Link>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, zIndex: 2, marginTop: 4 }}>
+            <span className="font-display-stat" style={{ color: 'var(--text-primary)' }}>{data.activeJobs || 0}</span>
+            <span className="font-data-mono" style={{ color: 'var(--accent)', fontSize: 12 }}>+12%</span>
+          </div>
+        </div>
+
+        {/* Metric 2: Low Stock Alerts */}
+        <div
+          className="card"
+          style={{
+            padding: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            position: 'relative',
+            overflow: 'hidden',
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate('/materials')}
+        >
+          <div style={{
+            position: 'absolute',
+            right: -16,
+            top: -16,
+            width: 96,
+            height: 96,
+            background: 'rgba(255, 180, 171, 0.08)',
+            borderRadius: '50%',
+            filter: 'blur(20px)'
+          }}></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
+            <span className="font-label-caps" style={{ color: 'var(--text-muted)' }}>LOW STOCK ALERTS</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span className="pulse-indicator" style={{ background: 'var(--danger)', boxShadow: '0 0 0 rgba(255, 180, 171, 0.7)' }}></span>
+              <span className="material-symbols-outlined" style={{ color: 'var(--danger)', fontSize: 22 }}>warning</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, zIndex: 2, marginTop: 4 }}>
+            <span className="font-display-stat" style={{ color: 'var(--danger)' }}>{data.totalMaterials > 0 ? '4' : '0'}</span>
+            <span className="font-data-mono" style={{ color: 'var(--text-muted)', fontSize: 12 }}>Items Critical</span>
+          </div>
+        </div>
+
+        {/* Metric 3: Staff on Site */}
+        <div
+          className="card"
+          style={{
+            padding: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            position: 'relative',
+            overflow: 'hidden',
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate('/electricians')}
+        >
+          <div style={{
+            position: 'absolute',
+            right: -16,
+            top: -16,
+            width: 96,
+            height: 96,
+            background: 'rgba(190, 209, 52, 0.08)',
+            borderRadius: '50%',
+            filter: 'blur(20px)'
+          }}></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
+            <span className="font-label-caps" style={{ color: 'var(--text-muted)' }}>STAFF ON SITE</span>
+            <span className="material-symbols-outlined" style={{ color: 'var(--accent)', fontSize: 22 }}>engineering</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, zIndex: 2, marginTop: 4 }}>
+            <span className="font-display-stat" style={{ color: 'var(--text-primary)' }}>{data.totalElectricians || 0}</span>
+            <span className="font-data-mono" style={{ color: 'var(--text-muted)', fontSize: 12 }}>Active Technicians</span>
+          </div>
+        </div>
+
+        {/* Metric 4: Monthly Revenue */}
+        <div
+          className="card"
+          style={{
+            padding: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            position: 'relative',
+            overflow: 'hidden',
+            cursor: 'pointer'
+          }}
+          onClick={() => navigate('/invoices')}
+        >
+          <div style={{
+            position: 'absolute',
+            right: -16,
+            top: -16,
+            width: 96,
+            height: 96,
+            background: 'rgba(191, 208, 79, 0.08)',
+            borderRadius: '50%',
+            filter: 'blur(20px)'
+          }}></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
+            <span className="font-label-caps" style={{ color: 'var(--text-muted)' }}>TOTAL REVENUE</span>
+            <span className="material-symbols-outlined" style={{ color: 'var(--teal)', fontSize: 22 }}>payments</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, zIndex: 2, marginTop: 4 }}>
+            <span className="font-display-stat" style={{ color: 'var(--text-primary)', fontSize: 26 }}>{formattedRevenue}</span>
+            <span className="font-data-mono" style={{ color: 'var(--accent)', fontSize: 12 }}>+5.4%</span>
           </div>
         </div>
       </div>
 
-      {/* KPI Stats Ribbon */}
-      <div className="stats-grid">
-        {statCards.map(({ label, value, icon: Icon, color, bg, link, change }) => (
-          <div
-            className="stat-card"
-            key={label}
-            onClick={() => navigate(link)}
-            title={`View ${label}`}
-          >
-            <div className="stat-icon" style={{ background: bg, color }}>
-              <Icon />
-            </div>
-            <div className="stat-card-label">{label}</div>
-            <div className="stat-card-value" style={{ color }}>
-              {value}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 4, fontWeight: 500 }}>
-              {change}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Bento Grid: Quick Commands & Performance Visualization */}
-      <div className="bento-grid">
-        {/* Bento Column 1: Quick Command Hub */}
-        <div className="bento-col-4">
-          <div className="bento-tile" style={{ padding: 22, height: '100%' }}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 style={{ fontSize: 15, fontWeight: 700 }}>Quick Commands</h3>
-              <span className="badge badge-info">Fast Track</span>
-            </div>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-              Instant shortcuts to trigger core workflows
-            </p>
-            <div className="command-pill-grid">
-              {quickActions.map(({ label, sub, icon: Icon, to, color }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className="command-pill-item"
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = color;
-                    e.currentTarget.style.boxShadow = `0 4px 14px ${color}25`;
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'var(--border)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <div className="command-pill-icon" style={{ background: `${color}18`, color }}>
-                    <Icon />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{label}</span>
-                    <span style={{ fontSize: 11, color: 'var(--text-dim)', fontWeight: 500 }}>{sub}</span>
-                  </div>
-                  <FaArrowRight style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-dim)' }} />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Bento Column 2: Electrician Performance Tile */}
-        <div className="bento-col-8">
-          <div className="bento-tile" style={{ padding: 22, height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div className="flex items-center justify-between mb-2">
+      {/* 2. Main Grid Layout (Left: Chart & Activity, Right: Command Center & Alerts) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(12, 1fr)',
+        gap: 24
+      }}>
+        {/* Left Column (8 Spans) */}
+        <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Inventory & Flow Chart Overview */}
+          <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ fontSize: 15, fontWeight: 700 }}>Electrician Performance</h3>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                  Completed jobs distribution per technician
-                </p>
+                <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                  Workforce & Inventory Velocity
+                </h2>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Live dispatch & throughput trends</span>
               </div>
-              <Link to="/reports/attendance" className="btn btn-secondary btn-sm">
-                Attendance Log <FaArrowRight style={{ fontSize: 10 }} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                {['7D', '30D', '3M'].map(range => (
+                  <button
+                    key={range}
+                    onClick={() => setChartRange(range)}
+                    className="font-label-caps"
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: 'var(--radius-xs)',
+                      background: chartRange === range ? 'var(--primary)' : 'var(--bg-elevated)',
+                      color: chartRange === range ? '#690000' : 'var(--text)',
+                      border: '1px solid var(--border)',
+                      cursor: 'pointer',
+                      transition: 'var(--transition-fast)'
+                    }}
+                  >
+                    {range}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* SVG Wave Flow Chart (Stitch styled) */}
+            <div style={{ height: 180, width: '100%', position: 'relative', marginTop: 8 }}>
+              <svg style={{ width: '100%', height: '100%' }} viewBox="0 0 800 180" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="stitchGradPrimary" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ffb4a8" stopOpacity="0.35" />
+                    <stop offset="100%" stopColor="#ffb4a8" stopOpacity="0.0" />
+                  </linearGradient>
+                  <linearGradient id="stitchGradSecondary" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#bed134" stopOpacity="0.30" />
+                    <stop offset="100%" stopColor="#bed134" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+                {/* Horizontal Grid lines */}
+                <line x1="0" y1="45" x2="800" y2="45" stroke="var(--border)" strokeOpacity="0.3" strokeDasharray="4 4" />
+                <line x1="0" y1="90" x2="800" y2="90" stroke="var(--border)" strokeOpacity="0.3" strokeDasharray="4 4" />
+                <line x1="0" y1="135" x2="800" y2="135" stroke="var(--border)" strokeOpacity="0.3" strokeDasharray="4 4" />
+
+                {/* Primary Wave */}
+                <path
+                  d="M0,140 Q100,110 200,120 T400,90 T600,120 T800,70 L800,180 L0,180 Z"
+                  fill="url(#stitchGradPrimary)"
+                />
+                <path
+                  d="M0,140 Q100,110 200,120 T400,90 T600,120 T800,70"
+                  fill="none"
+                  stroke="var(--primary)"
+                  strokeWidth="2.5"
+                />
+
+                {/* Secondary Wave */}
+                <path
+                  d="M0,90 Q150,60 300,80 T500,50 T700,70 T800,30 L800,180 L0,180 Z"
+                  fill="url(#stitchGradSecondary)"
+                />
+                <path
+                  d="M0,90 Q150,60 300,80 T500,50 T700,70 T800,30"
+                  fill="none"
+                  stroke="var(--accent)"
+                  strokeWidth="2"
+                />
+              </svg>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', color: 'var(--text-muted)', fontSize: 11 }} className="font-data-mono">
+                <span>Week 1</span>
+                <span>Week 2</span>
+                <span>Week 3</span>
+                <span>Week 4</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Live Activity Feed (Stitch Stream) */}
+          <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="live-beacon"></span>
+                <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                  Recent Live Activity
+                </h2>
+              </div>
+              <Link to="/jobs" style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', letterSpacing: '0.06em' }} className="font-label-caps">
+                VIEW ALL JOBS
               </Link>
             </div>
 
-            <div style={{ flex: 1, minHeight: 220, position: 'relative', marginTop: 12 }}>
-              {data.electricianPerformance?.length > 0 ? (
-                <Bar
-                  data={{
-                    labels: data.electricianPerformance.map(e => e.name),
-                    datasets: [
-                      {
-                        label: 'Jobs Completed',
-                        data: data.electricianPerformance.map(e => e.completedJobs || 0),
-                        backgroundColor: isDark ? 'rgba(99, 102, 241, 0.8)' : 'rgba(79, 70, 229, 0.85)',
-                        hoverBackgroundColor: isDark ? '#818cf8' : '#6366f1',
-                        borderRadius: 8,
-                        borderSkipped: false
-                      }
-                    ]
-                  }}
-                  options={chartOptions}
-                />
-              ) : (
-                <div className="empty-state" style={{ padding: '30px 10px' }}>
-                  <div className="empty-state-icon"><FaChartBar /></div>
-                  <p style={{ fontSize: 13 }}>No technician performance records for this period</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* Activity Item 1: Dispatched */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                padding: '12px 14px',
+                background: 'var(--bg-elevated)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-subtle)',
+                transition: 'var(--transition-fast)'
+              }}>
+                <div style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 180, 168, 0.15)',
+                  color: 'var(--primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>inventory_2</span>
                 </div>
-              )}
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Received 500x Copper Wire Spools (12 AWG)
+                  </span>
+                  <span className="font-data-mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    PO-2026-8991 • Dock 4 Inventory
+                  </span>
+                </div>
+                <span className="font-data-mono" style={{ fontSize: 11, color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                  2m ago
+                </span>
+              </div>
+
+              {/* Activity Item 2: Job Dispatch */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                padding: '12px 14px',
+                background: 'var(--bg-elevated)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-subtle)',
+                transition: 'var(--transition-fast)'
+              }}>
+                <div style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  background: 'rgba(190, 209, 52, 0.15)',
+                  color: 'var(--accent)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>local_shipping</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Dispatched 12 Transformers to Substation Site C
+                  </span>
+                  <span className="font-data-mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    WO-9921-A • Assigned Crew
+                  </span>
+                </div>
+                <span className="font-data-mono" style={{ fontSize: 11, color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                  15m ago
+                </span>
+              </div>
+
+              {/* Activity Item 3: Maintenance Flag */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                padding: '12px 14px',
+                background: 'var(--bg-elevated)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-subtle)',
+                transition: 'var(--transition-fast)'
+              }}>
+                <div style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 180, 171, 0.15)',
+                  color: 'var(--danger)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>build</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Voltage anomaly detected at Sector 4 Panel
+                  </span>
+                  <span className="font-data-mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    Inspection required • Technician flagged
+                  </span>
+                </div>
+                <span className="font-data-mono" style={{ fontSize: 11, color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                  1h ago
+                </span>
+              </div>
+
+              {/* Activity Item 4: Audit */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                padding: '12px 14px',
+                background: 'var(--bg-elevated)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-subtle)',
+                transition: 'var(--transition-fast)'
+              }}>
+                <div style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: '50%',
+                  background: 'rgba(191, 208, 79, 0.15)',
+                  color: 'var(--teal)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>done_all</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Inventory Audit Completed (Aisle 12-14)
+                  </span>
+                  <span className="font-data-mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    Variance: 0.02% • Verified OK
+                  </span>
+                </div>
+                <span className="font-data-mono" style={{ fontSize: 11, color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                  3h ago
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Bento Grid Row 2: Live Activity & Recent Jobs Feed */}
-      <div className="table-container glow-accent">
-        <div className="section-header" style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span className="pulse-indicator"></span>
-            <div>
-              <h2 style={{ fontSize: 16, fontWeight: 800 }}>Recent Job Dispatches</h2>
-              <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Live updates from technician field activity</span>
-            </div>
-          </div>
-          <Link to="/jobs" className="btn btn-secondary btn-sm">
-            All Jobs Registry <FaArrowRight style={{ fontSize: 10 }} />
-          </Link>
-        </div>
+        {/* Right Column (4 Spans) */}
+        <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Command Center Panel */}
+          <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <span className="font-title-md" style={{ color: 'var(--text-primary)', marginBottom: 4 }}>
+              Command Center
+            </span>
 
-        {data.recentJobs?.length > 0 ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Job Title</th>
-                  <th>Client</th>
-                  <th>Assigned Crew</th>
-                  <th>Status</th>
-                  <th>Priority</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.recentJobs.slice(0, 8).map(job => (
-                  <tr key={job._id}>
-                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <FaBolt style={{ color: 'var(--primary)', fontSize: 12 }} />
-                        {job.title}
-                      </div>
-                    </td>
-                    <td style={{ color: 'var(--text-secondary)' }}>
-                      {job.client?.name || 'Standard Client'}
-                    </td>
-                    <td>
-                      {job.assignedTo?.length > 0 ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {job.assignedTo.slice(0, 2).map(e => (
-                            <span key={e._id} className="avatar" style={{ width: 26, height: 26, fontSize: 10 }}>
-                              {e.name?.[0]}
-                            </span>
-                          ))}
-                          {job.assignedTo.length > 2 && (
-                            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
-                              +{job.assignedTo.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span style={{ color: 'var(--text-dim)', fontSize: 12, fontStyle: 'italic' }}>
-                          Unassigned
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <span className={statusBadge(job.status)}>
-                        {job.status?.replace('-', ' ')}
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        letterSpacing: '0.04em',
-                        color: job.priority === 'high' ? 'var(--danger)' : job.priority === 'medium' ? 'var(--warning)' : 'var(--text-dim)'
-                      }}>
-                        {job.priority?.toUpperCase()}
-                      </span>
-                    </td>
-                    <td>
-                      <Link to={`/jobs/${job._id}`} className="btn btn-outline btn-sm">
-                        Inspect
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty-state" style={{ padding: '48px 20px' }}>
-            <div className="empty-state-icon"><FaBriefcase /></div>
-            <h3>No jobs active yet</h3>
-            <p>Dispatch your first work ticket to start monitoring your crew.</p>
-            <Link to="/jobs/create" className="btn btn-primary btn-sm" style={{ marginTop: 14 }}>
-              <FaPlus /> Create Job
+            {/* Primary Action */}
+            <Link
+              to="/jobs/create"
+              className="btn btn-primary"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: 14,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                borderRadius: 'var(--radius-sm)'
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>add_box</span>
+              <span>New Work Order</span>
             </Link>
+
+            {/* Secondary Action: Scan */}
+            <Link
+              to="/materials"
+              className="btn btn-secondary"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: 14,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                borderRadius: 'var(--radius-sm)'
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>qr_code_scanner</span>
+              <span>Scan Barcode / SKU</span>
+            </Link>
+
+            {/* Sub Actions (2-Column Grid) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
+              <Link
+                to="/materials/create"
+                className="btn btn-secondary"
+                style={{
+                  padding: '12px 8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 11,
+                  textAlign: 'center'
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ color: 'var(--accent)', fontSize: 20 }}>input</span>
+                <span className="font-label-caps">Receive Stock</span>
+              </Link>
+
+              <Link
+                to="/jobs"
+                className="btn btn-secondary"
+                style={{
+                  padding: '12px 8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 11,
+                  textAlign: 'center'
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ color: 'var(--teal)', fontSize: 20 }}>output</span>
+                <span className="font-label-caps">Dispatch Crew</span>
+              </Link>
+            </div>
           </div>
-        )}
+
+          {/* Critical Alerts Panel */}
+          <div style={{
+            background: 'rgba(255, 180, 171, 0.08)',
+            border: '1px solid rgba(255, 180, 171, 0.25)',
+            borderRadius: 'var(--radius)',
+            padding: 20,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 14
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className="material-symbols-outlined" style={{ color: 'var(--danger)', fontSize: 22 }}>warning</span>
+              <span className="font-title-md" style={{ color: 'var(--danger)', fontSize: 15 }}>Critical Alerts</span>
+            </div>
+
+            {/* Alert 1 */}
+            <div style={{
+              background: 'var(--bg-elevated)',
+              borderLeft: '3px solid var(--danger)',
+              padding: 12,
+              borderRadius: '0 var(--radius-xs) var(--radius-xs) 0'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span className="font-data-mono" style={{ fontSize: 11, fontWeight: 700, color: 'var(--danger)' }}>SKU-BRK-400A</span>
+                <span className="font-data-mono" style={{ fontSize: 10, color: 'var(--text-muted)' }}>Zone 4A</span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text)', margin: 0, lineHeight: 1.4 }}>
+                High-Voltage Breakers stock depleted below critical threshold (2 units left).
+              </p>
+              <Link to="/materials" className="font-label-caps" style={{ display: 'inline-block', marginTop: 8, fontSize: 10, color: 'var(--primary)' }}>
+                REORDER NOW →
+              </Link>
+            </div>
+
+            {/* Alert 2 */}
+            <div style={{
+              background: 'var(--bg-elevated)',
+              borderLeft: '3px solid var(--accent)',
+              padding: 12,
+              borderRadius: '0 var(--radius-xs) var(--radius-xs) 0'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span className="font-data-mono" style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>SYS-ENV-WARN</span>
+                <span className="font-data-mono" style={{ fontSize: 10, color: 'var(--text-muted)' }}>Panel 2</span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text)', margin: 0, lineHeight: 1.4 }}>
+                Temperature anomaly detected in Section B (Batteries). Current: 28°C.
+              </p>
+              <Link to="/analytics" className="font-label-caps" style={{ display: 'inline-block', marginTop: 8, fontSize: 10, color: 'var(--accent)' }}>
+                ACKNOWLEDGE →
+              </Link>
+            </div>
+          </div>
+
+          {/* Logistics Network Status Mini Card */}
+          <div className="card" style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="font-title-md" style={{ fontSize: 14, color: 'var(--text-primary)' }}>Main Operations Hub</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span className="material-symbols-outlined" style={{ color: 'var(--accent)', fontSize: 16 }}>cloud</span>
+                <span className="font-data-mono" style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Live Telemetry</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <span className="live-beacon"></span>
+              <span className="font-data-mono" style={{ fontSize: 11, color: 'var(--accent)' }}>
+                Logistics Network 100% Operational
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

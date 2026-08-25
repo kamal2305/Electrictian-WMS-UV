@@ -47,7 +47,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
         {!collapsed && (
           <div className="sidebar-brand">
             <div className="sidebar-brand-name">ElectroTrack</div>
-            <div className="sidebar-brand-sub">ENTERPRISE WMS</div>
+            <div className="sidebar-brand-sub">Enterprise WMS</div>
           </div>
         )}
         <button
@@ -89,6 +89,14 @@ const Sidebar = ({ collapsed, onToggle }) => {
           </>
         )}
       </nav>
+
+      {/* SYSTEM ONLINE Beacon — Stitch footer indicator */}
+      {!collapsed && (
+        <div className="sidebar-system-status">
+          <span className="live-beacon"></span>
+          <span className="sidebar-system-label">SYSTEM ONLINE</span>
+        </div>
+      )}
 
       {/* Footer User Info */}
       <div className="sidebar-footer">

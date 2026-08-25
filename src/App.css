@@ -16,14 +16,14 @@
   top: 0;
   bottom: 0;
   width: var(--sidebar-width);
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--border);
+  background: var(--sidebar-bg);    /* #130d0b — Stitch surface-container-lowest */
+  border-right: 1px solid rgba(94, 63, 58, 0.3);
   display: flex;
   flex-direction: column;
   z-index: 50;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 4px 0 24px rgba(19, 13, 11, 0.6);
 }
 
 .sidebar.collapsed {
@@ -34,25 +34,22 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 18px;
+  padding: 0 20px;
   height: 64px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(94, 63, 58, 0.2);
   flex-shrink: 0;
   position: relative;
 }
 
 .sidebar-logo {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  color: #ffffff;
+  font-size: 20px;
+  color: var(--primary);
   flex-shrink: 0;
-  box-shadow: 0 4px 14px var(--primary-glow);
 }
 
 .sidebar-brand {
@@ -61,17 +58,19 @@
 }
 
 .sidebar-brand-name {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
+  color: var(--primary);     /* coral — matches Stitch ElectroTrack heading */
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
 .sidebar-brand-sub {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--accent);
+  color: var(--accent);      /* lime — ENTERPRISE WMS */
+  text-transform: uppercase;
 }
 
 .sidebar-toggle {
@@ -97,13 +96,13 @@
 
 .sidebar-toggle:hover {
   background: var(--primary);
-  color: #ffffff;
+  color: #690000;
   border-color: var(--primary);
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 14px 10px;
+  padding: 16px 12px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -125,45 +124,41 @@
   padding: 0;
 }
 
+/* Stitch pill-style nav items */
 .nav-item-sidebar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 600;
+  gap: 16px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  color: var(--text-secondary);     /* on-surface-variant */
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: var(--transition-fast);
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   position: relative;
 }
 
 .nav-item-sidebar:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-primary);
+  background: rgba(94, 63, 58, 0.35); /* surface-variant */
+  color: var(--text);
 }
 
+/* Active: Stitch primary-container pill */
 .nav-item-sidebar.active {
-  background: var(--primary-dim);
-  color: var(--primary-hover);
+  background: var(--primary-active);  /* #e0160e — crimson container */
+  color: #fff4f2;                     /* on-primary-container */
   font-weight: 700;
+  box-shadow: 0 4px 16px rgba(224, 22, 14, 0.30);
 }
 
+/* Remove old bar indicator — pill style replaces it */
 .nav-item-sidebar.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 15%;
-  bottom: 15%;
-  width: 3.5px;
-  background: linear-gradient(to bottom, var(--primary), var(--accent));
-  border-radius: 0 4px 4px 0;
-  box-shadow: 0 0 8px var(--primary-glow);
+  content: none;
 }
 
 .nav-item-icon {
@@ -190,12 +185,7 @@
 }
 
 .sidebar.collapsed .nav-item-sidebar.active::before {
-  top: 50%;
-  bottom: auto;
-  height: 24px;
-  transform: translateY(-50%);
-  left: 0;
-  width: 3.5px;
+  content: none;
 }
 
 /* Tooltip when collapsed */
@@ -219,8 +209,8 @@
 }
 
 .sidebar-footer {
-  padding: 14px 10px;
-  border-top: 1px solid var(--border);
+  padding: 14px 12px;
+  border-top: 1px solid rgba(94, 63, 58, 0.2);
   flex-shrink: 0;
 }
 
@@ -248,9 +238,12 @@
 }
 
 .sidebar-user-role {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
   text-transform: capitalize;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .sidebar-logout {
@@ -275,6 +268,24 @@
 .sidebar-logout:hover {
   background: var(--danger-dim);
   color: var(--danger);
+}
+
+/* SYSTEM ONLINE live beacon row */
+.sidebar-system-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-top: 1px solid rgba(94, 63, 58, 0.2);
+}
+
+.sidebar-system-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);   /* lime — matches Stitch secondary */
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .sidebar.collapsed .sidebar-user {
@@ -310,9 +321,10 @@
   padding: 0;
 }
 
+/* Stitch-style dashboard hero: warm surface-container */
 .dashboard-hero-banner {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(6, 182, 212, 0.08) 100%);
-  border: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(255, 180, 168, 0.10) 0%, rgba(190, 209, 52, 0.06) 100%);
+  border: 1px solid rgba(94, 63, 58, 0.5);
   border-radius: var(--radius-lg);
   padding: 28px 32px;
   margin-bottom: 24px;
@@ -328,7 +340,7 @@
   top: -50px;
   width: 220px;
   height: 220px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 180, 168, 0.20) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
